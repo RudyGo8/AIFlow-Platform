@@ -11,8 +11,9 @@ ENV/
 dist/
 build/
 *.log
-.venv
-venv
+.venv/
+venv/
+.env
 
 # Node
 node_modules/
@@ -52,3 +53,12 @@ logs/
 # 临时文件
 *.tmp
 *.temp
+
+# MySQL / Docker data
+docker/mysql/data/
+docker/mysql/logs/
+docker/mysql/conf.d/
+docker/redis/data/
+docker/milvus/data/
+docker/minio/data/
+docker/etcd/data/
