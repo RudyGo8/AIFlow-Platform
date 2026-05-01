@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/12/30
-# @Author : sonder
-# @File : file.py
-# @Comment : 文件管理模型
+
 
 from tortoise import fields
 from models.common import BaseModel

@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/01/03
-# @Author : sonder
-# @File : api_tools.py
-# @Comment : API生成工具
+
 
 import re
 from pathlib import Path

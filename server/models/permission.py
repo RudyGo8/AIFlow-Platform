@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/17 19:13
-# @UpdateTime : 2025/12/26
-# @Author : sonder
-# @File : permission.py
-# @Software : PyCharm
-# @Comment : 权限模型 - 支持菜单、按钮、接口三种类型
+
 from tortoise import fields
 
 from models.common import BaseModel

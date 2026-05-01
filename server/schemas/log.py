@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/25 02:22
-# @UpdateTime : 2025/08/25 02:22
-# @Author : sonder
-# @File : log.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 from pydantic import Field, ConfigDict
 
 from schemas.common import BaseResponse, ListQueryResult, DataBaseModel

@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/12/26
-# @Author : sonder
-# @File : casbin.py
-# @Comment : Casbin 权限管理工具 - 完整 RBAC 权限控制（菜单/按钮/接口 + 数据权限）
+
 
 import os
 import tempfile

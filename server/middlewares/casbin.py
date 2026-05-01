@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/12/26
-# @Author : sonder
-# @File : casbin.py
-# @Comment : Casbin 权限验证中间件 - RBAC + 部门层级数据权限
+
 
 from typing import List
 from fastapi import Request

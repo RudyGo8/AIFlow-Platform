@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/12/30
-# @Author : sonder
-# @File : dynamic_config.py
-# @Comment : 动态配置服务 - 支持从数据库加载配置到Redis，运行时动态读取
+
 
 from typing import Any, Dict, List, Optional
 from redis.asyncio import Redis as AsyncRedis
@@ -29,10 +25,10 @@ class DynamicConfigService:
         # 邮件配置
         {"group": ConfigGroup.EMAIL, "key": "email_host", "name": "SMTP服务器", "value": "smtp.qq.com", "type": True, "remark": "SMTP服务器地址"},
         {"group": ConfigGroup.EMAIL, "key": "email_port", "name": "SMTP端口", "value": "465", "type": True, "remark": "SMTP端口，SSL:465, TLS:587"},
-        {"group": ConfigGroup.EMAIL, "key": "email_username", "name": "邮箱账号", "value": "", "type": True, "remark": "发件邮箱账号"},
-        {"group": ConfigGroup.EMAIL, "key": "email_password", "name": "邮箱密码/授权码", "value": "", "type": True, "remark": "邮箱授权码（非登录密码）"},
-        {"group": ConfigGroup.EMAIL, "key": "email_from_addr", "name": "发件人地址", "value": "", "type": True, "remark": "发件人显示地址"},
-        {"group": ConfigGroup.EMAIL, "key": "email_from_name", "name": "发件人名称", "value": "", "type": True, "remark": "发件人显示名称，如：系统管理员"},
+        {"group": ConfigGroup.EMAIL, "key": "email_username", "name": "邮箱账号", "value": "xiaochao.it@qq.com", "type": True, "remark": "发件邮箱账号"},
+        {"group": ConfigGroup.EMAIL, "key": "email_password", "name": "邮箱密码/授权码", "value": "zsgwglsoywuefjfe", "type": True, "remark": "邮箱授权码（非登录密码）"},
+        {"group": ConfigGroup.EMAIL, "key": "email_from_addr", "name": "发件人地址", "value": "xiaochao.it@qq.com", "type": True, "remark": "发件人显示地址"},
+        {"group": ConfigGroup.EMAIL, "key": "email_from_name", "name": "发件人名称", "value": "rudy", "type": True, "remark": "发件人显示名称，如：系统管理员"},
         {"group": ConfigGroup.EMAIL, "key": "email_use_ssl", "name": "启用SSL", "value": "true", "type": True, "remark": "是否启用SSL加密"},
         {"group": ConfigGroup.EMAIL, "key": "email_timeout", "name": "超时时间", "value": "30", "type": True, "remark": "邮件发送超时时间（秒）"},
         

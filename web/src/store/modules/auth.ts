@@ -11,7 +11,7 @@ export const useAuthStore = defineStore(
     // 验证码是否启用
     const captcha_enabled = ref(false)
     // 注册是否启用
-    const register_enabled = ref(false)
+    const register_enabled = ref(true)
     // 验证码UUID
     const captcha_uuid = ref<string | null>(null)
     // 验证码图片

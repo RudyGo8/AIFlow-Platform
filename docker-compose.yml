@@ -1,44 +1,91 @@
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.backend
-    container_name: fva-backend
+  mysql:
+    image: mysql:8.0
+    container_name: fva-mysql
     restart: unless-stopped
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./server/config.yaml:/app/config.yaml
-      - ./server/uploads:/app/uploads
-      - ./server/logs:/app/logs
-      - ./server/data:/app/data
-      - ./server/fva.db:/app/fva.db  # SQLite 数据库文件持久化
     environment:
       - TZ=Asia/Shanghai
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=fva_db
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql
     networks:
       - fva-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
-      interval: 30s
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 20s
       timeout: 10s
-      retries: 3
+      retries: 10
+      start_period: 30s
 
-  frontend:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.frontend
-    container_name: fva-frontend
+  redis:
+    image: redis:7-alpine
+    container_name: fva-redis
     restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "80:80"
-    depends_on:
-      - backend
-    environment:
-      - TZ=Asia/Shanghai
+      - "6379:6379"
+    volumes:
+      - ./docker/redis/data:/data
     networks:
       - fva-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+#   backend:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile.backend
+#     container_name: fva-backend
+#     restart: unless-stopped
+#     depends_on:
+#       mysql:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#     ports:
+#       - "9090:9090"
+#     volumes:
+#       - ./server/config.yaml:/app/config.yaml
+#       - ./server/uploads:/app/uploads
+#       - ./server/logs:/app/logs
+#       - ./server/data:/app/data
+#     environment:
+#       - TZ=Asia/Shanghai
+#     extra_hosts:
+#       - "host.docker.internal:host-gateway"
+#     networks:
+#       - fva-network
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 3
+
+#   frontend:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile.frontend
+#     container_name: fva-frontend
+#     restart: unless-stopped
+#     ports:
+#       - "80:80"
+#     depends_on:
+#       - backend
+#     environment:
+#       - TZ=Asia/Shanghai
+#     networks:
+#       - fva-network
 
 networks:
   fva-network:

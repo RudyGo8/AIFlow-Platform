@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2026/01/03 01:36
-# @Author : sonder
-# @File : user.py
-# @Comment : 用户表模型。
+
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict

@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2026/01/03 01:40
-# @Author : sonder
-# @File : department.py
-# @Comment : 部门模型
+
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict

@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/03 22:29
-# @UpdateTime : 2025/08/04 00:00
-# @Author : sonder
-# @File : redis.py
-# @Software : PyCharm
-# @Comment : Redis工具类（基于 redis-py 5.x，兼容 Python 3.11+）
+
 
 import asyncio
 from enum import Enum
@@ -62,11 +56,6 @@ class RedisUtil:
         logger.debug("获取Redis配置...")
         logger.debug(redis_cfg)
         
-        # 检查是否使用内存模式
-        if hasattr(redis_cfg, 'mode') and redis_cfg.mode == 'memory':
-            logger.info("使用内存模拟Redis模式")
-            from utils.memory_redis import MemoryRedis
-            return MemoryRedis()
         
         # 服务器模式
         conn_params = {
@@ -108,11 +97,6 @@ class RedisUtil:
     async def close_redis_connection(cls, conn):
         """关闭Redis连接"""
         try:
-            # 内存模式不需要关闭连接
-            if hasattr(conn, '__class__') and conn.__class__.__name__ == 'MemoryRedis':
-                logger.info("内存Redis模式，无需关闭连接")
-                return
-            
             await conn.aclose()
             logger.info("Redis连接已关闭")
         except RedisError as e:
@@ -145,17 +129,11 @@ class RedisUtil:
                     pass
 
             # 重新设置所有系统配置到Redis（带前缀）
-            # 内存模式不支持 pipeline，直接逐个设置
-            if hasattr(conn, '__class__') and conn.__class__.__name__ == 'MemoryRedis':
+            async with conn.pipeline() as pipe:
                 for item in configs:
                     redis_key = cls._get_config_key(item['key'])
-                    await conn.set(redis_key, item["value"])
-            else:
-                async with conn.pipeline() as pipe:
-                    for item in configs:
-                        redis_key = cls._get_config_key(item['key'])
-                        await pipe.set(redis_key, item["value"])
-                    await pipe.execute()
+                    await pipe.set(redis_key, item["value"])
+                await pipe.execute()
 
             logger.info(f"系统配置已同步到Redis（共{len(configs)}条）")
 
@@ -169,7 +147,6 @@ class RedisUtil:
         try:
             redis_key = cls._get_config_key(key)
             value = await conn.get(redis_key)
-            # 内存模式返回字符串，服务器模式返回字节
             if isinstance(value, bytes):
                 return value.decode('utf-8')
             return value or ""

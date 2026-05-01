@@ -383,6 +383,7 @@
         register_enabled: captchaData.register_enabled
       })
     } catch (error) {
+      ElMessage.error(t('httpMsg.requestFailed'))
       console.error('Failed to load system config:', error)
     }
   }

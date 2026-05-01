@@ -1,8 +1,3 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/12/26
-# @Author : sonder
-# @File : casbin.py
-# @Comment : Casbin 策略模型
 
 from tortoise import fields
 

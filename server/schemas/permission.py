@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/25 02:02
-# @UpdateTime : 2025/12/26
-# @Author : sonder
-# @File : permission.py
-# @Software : PyCharm
-# @Comment : 权限 Schema - 支持菜单、按钮、接口三种类型
+
 from typing import Optional, List
 
 from pydantic import BaseModel, Field, ConfigDict

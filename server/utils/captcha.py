@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/04 01:26
-# @UpdateTime : 2025/08/04 01:26
-# @Author : sonder
-# @File : captcha.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 import base64
 import io
 import os

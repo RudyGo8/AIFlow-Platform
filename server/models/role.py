@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/17 19:10
-# @UpdateTime : 2025/12/26
-# @Author : sonder
-# @File : role.py
-# @Software : PyCharm
-# @Comment : 角色模型 - 权限管理已迁移至 Casbin
+
 from tortoise import fields
 
 from models.common import BaseModel

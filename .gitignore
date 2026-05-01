@@ -37,10 +37,11 @@ docs/.vitepress/cache/
 # 数据库
 *.db
 *.sqlite
+*.sqlite3
 
 # 上传文件
 server/data/
-server/assets/uploads/
+server/assets/
 server/uploads/
 
 

@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/25 03:14
-# @UpdateTime : 2025/08/25 03:14
-# @Author : sonder
-# @File : server.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 from typing import Optional, List
 
 from pydantic import BaseModel, ConfigDict, Field

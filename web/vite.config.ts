@@ -14,7 +14,7 @@ import UnoCSS from 'unocss/vite'
 export default ({ mode }: { mode: string }) => {
   const root = process.cwd()
   const env = loadEnv(mode, root)
-  const { VITE_VERSION, VITE_PORT, VITE_BASE_URL, VITE_API_URL } = env
+  const { VITE_VERSION, VITE_PORT, VITE_BASE_URL, VITE_API_URL, VITE_ENABLE_VUE_DEVTOOLS } = env
 
   console.log(`🚀 API_URL = ${VITE_API_URL}`)
   console.log(`🚀 VERSION = ${VITE_VERSION}`)
@@ -26,6 +26,9 @@ export default ({ mode }: { mode: string }) => {
     base: VITE_BASE_URL,
     server: {
       port: Number(VITE_PORT),
+      headers: {
+        'Cache-Control': 'no-store'
+      },
       proxy: {
         '/api': {
           target: VITE_API_URL,
@@ -103,7 +106,7 @@ export default ({ mode }: { mode: string }) => {
         threshold: 10240, // 只有大小大于该值的资源会被处理 10240B = 10KB
         deleteOriginFile: false // 压缩后是否删除原文件
       }),
-      vueDevTools(),
+      ...(VITE_ENABLE_VUE_DEVTOOLS === 'true' ? [vueDevTools()] : []),
       // 打包分析
       // visualizer({
       //   open: true,

@@ -1,9 +1,3 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/01/02
-# @Author : sonder
-# @File : setup_app.py
-# @Comment : 系统初始化应用
-
 import secrets
 import hashlib
 from pathlib import Path
@@ -22,17 +16,17 @@ CONFIG_PATH = BASE_DIR / "config.yaml"
 
 class DatabaseConfig(BaseModel):
     """数据库配置"""
-    engine: str = "sqlite"
-    host: str = ""
-    port: int = 0
-    username: str = ""
-    password: str = ""
-    database: str = "fva.db"
+    engine: str = "mysql"
+    host: str = "127.0.0.1"
+    port: int = 3307
+    username: str = "root"
+    password: str = "123456"
+    database: str = "fva_db"
 
 
 class RedisConfig(BaseModel):
     """Redis配置"""
-    mode: str = "memory"
+    mode: str = "server"
     host: str = "127.0.0.1"
     port: int = 6379
     password: str = ""
@@ -57,7 +51,7 @@ class AppConfig(BaseModel):
 class AdminConfig(BaseModel):
     """管理员配置"""
     username: str = "admin"
-    password: str = "admin123@*"
+    password: str = "admin123"
     nickname: str = "超级管理员"
     email: str = "admin@example.com"
 
@@ -153,9 +147,6 @@ async def test_database(config: DatabaseConfig):
 async def test_redis(config: RedisConfig):
     """测试Redis连接"""
     try:
-        # 内存模式无需测试
-        if config.mode == "memory":
-            return {"success": True, "msg": "内存模式无需测试连接"}
         
         # 服务器模式测试连接
         import redis.asyncio as aioredis

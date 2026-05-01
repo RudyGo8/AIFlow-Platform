@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/12/28
-# @Author : sonder
-# @File : notification.py
-# @Comment : 通知模型
+
 
 from enum import IntEnum
 from tortoise import fields

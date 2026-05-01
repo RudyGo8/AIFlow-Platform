@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/04 02:00
-# @UpdateTime : 2025/08/04 02:00
-# @Author : sonder
-# @File : cors.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

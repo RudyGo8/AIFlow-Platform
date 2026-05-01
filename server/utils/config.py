@@ -284,14 +284,13 @@ class RedisSettings(BaseConfig):
     Redis配置类（单一Redis连接）
     管理缓存、会话等存储
     """
-    mode: str = 'memory'
+    mode: str = 'server'
     """
     Redis运行模式
-    - 'memory'：内存模拟模式（默认），无需Redis服务器，适合开发和测试
-    - 'server'：服务器模式，连接真实的Redis服务器，适合生产环境
+    - 'server'：服务器模式，连接真实的Redis服务器
     """
     
-    host: str = '127.0.0.1'
+    host: str = 'redis'
     """
     Redis主机地址（仅server模式生效）
     - 本地：'127.0.0.1'（默认）
@@ -344,7 +343,7 @@ class RedisSettings(BaseConfig):
     @field_validator('mode')
     def validate_mode(cls, v):
         """验证Redis模式合法性"""
-        supported = ['memory', 'server']
+        supported = ['server']
         if v not in supported:
             raise ValueError(f"不支持的Redis模式: {v}，支持的模式: {supported}")
         return v

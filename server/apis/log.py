@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/25 02:25
-# @UpdateTime : 2025/08/25 02:25
-# @Author : sonder
-# @File : log.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 from datetime import datetime
 from typing import Optional
 

@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/04 01:42
-# @UpdateTime : 2025/12/26
-# @Author : sonder
-# @File : auth.py
-# @Software : PyCharm
-# @Comment : 认证与权限控制
+
 from datetime import timedelta, datetime
 from functools import wraps
 from typing import Union, Optional

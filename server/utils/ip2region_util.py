@@ -1,9 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2026/01/07
-# @Author : sonder
-# @File : ip2region.py
-# @Software : PyCharm
-# @Comment : 基于 ip2region xdb 的 IP 地理位置解析
+
 import atexit
 import ipaddress
 from pathlib import Path

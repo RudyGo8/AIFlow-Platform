@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/10/21
-# @Author : sonder
-# @File : dashboard.py
-# @Comment : 工作台数据统计API
+
 
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request

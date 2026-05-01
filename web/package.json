@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite --open",
+    "dev:force": "vite --force --open",
     "build": "vue-tsc --noEmit && vite build",
     "serve": "vite preview",
     "lint": "eslint",
@@ -85,7 +86,7 @@
     "@unocss/preset-wind4": "^66.5.0",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/compiler-sfc": "^3.0.5",
-    "commitizen": "^4.3.0",
+    "commitizen": "^4.2.4",
     "cz-git": "^1.11.1",
     "eslint": "^9.9.1",
     "eslint-config-prettier": "^9.1.0",

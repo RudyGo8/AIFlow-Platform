@@ -13,6 +13,7 @@ RUN pip config set global.index-url https://mirrors.cloud.tencent.com/pypi/simpl
 
 # 安装系统依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
     gcc \
     default-libmysqlclient-dev \
     pkg-config \

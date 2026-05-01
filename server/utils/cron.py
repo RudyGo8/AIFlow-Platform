@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/03 20:08
-# @UpdateTime : 2025/08/03 20:08
-# @Author : sonder
-# @File : cron.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 import re
 from datetime import datetime
 

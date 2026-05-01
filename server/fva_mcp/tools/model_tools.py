@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/01/03
-# @Author : sonder
-# @File : model_tools.py
-# @Comment : 数据库模型定义工具
+
 
 import re
 from pathlib import Path

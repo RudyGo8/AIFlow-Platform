@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/04 00:10
-# @UpdateTime : 2025/08/04 00:10
-# @Author : sonder
-# @File : common.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 
 from tortoise import fields, models
 

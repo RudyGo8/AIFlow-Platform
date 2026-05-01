@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/12/30
-# @Author : sonder
-# @File : file.py
-# @Comment : 文件管理API
+
 
 from typing import Optional, List
 from pathlib import Path

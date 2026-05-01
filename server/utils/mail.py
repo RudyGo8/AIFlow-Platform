@@ -1,16 +1,13 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/03 20:15
-# @UpdateTime : 2025/08/03 20:15
-# @Author : sonder
-# @File : mail.py
-# @Software : PyCharm
-# @Comment : 本程序
+
+import asyncio
 import random
+import smtplib
+import ssl
 from datetime import timedelta
 from email.message import EmailMessage
 from email.utils import formataddr
+from typing import Optional
 
-from aiosmtplib import send
 from fastapi import Request
 from jinja2 import Environment, FileSystemLoader
 
@@ -61,6 +58,7 @@ class Email:
             from_name = ""
             use_ssl = True
         
+        logger.info(f"邮件配置读取: host={host}, port={port}, username={username}, use_ssl={use_ssl}")
         return {
             "host": host,
             "port": port,
@@ -83,7 +81,7 @@ class Email:
         # 获取邮件配置
         email_cfg = await cls._get_email_config(request)
         
-        code = await cls.generate_verification_code(4)
+        code = await cls.generate_verification_code(6)
         codeStr = ""
         for i in code:
             codeStr += f"""<button class="button">{i}</button>"""
@@ -113,14 +111,24 @@ class Email:
         message.set_content(content, subtype="html")
         
         try:
-            await send(
-                message,
-                hostname=email_cfg["host"],
-                port=email_cfg["port"],
-                username=email_cfg["username"],
-                password=email_cfg["password"],
-                use_tls=email_cfg["use_ssl"]
-            )
+            logger.info(f"准备发送邮件: host={email_cfg['host']}, port={email_cfg['port']}, username={email_cfg['username']}")
+
+            def _send_sync():
+                context = ssl.create_default_context()
+                logger.info(f"开始连接SMTP: {email_cfg['host']}:{email_cfg['port']}")
+                with smtplib.SMTP_SSL(
+                    email_cfg["host"],
+                    email_cfg["port"],
+                    context=context
+                ) as server:
+                    logger.info("SMTP连接成功，准备登录")
+                    server.login(email_cfg["username"], email_cfg["password"])
+                    logger.info("登录成功，准备发送邮件")
+                    server.send_message(message)
+                    logger.info("邮件发送完成")
+
+            await asyncio.to_thread(_send_sync)
+
             await request.app.state.redis.set(
                 f"{RedisKeyConfig.EMAIL_CODES.key}:{mail}-{username}",
                 code,
@@ -129,7 +137,7 @@ class Email:
             logger.info(f"发送邮件至{mail}成功，验证码：{code}")
             return True
         except Exception as e:
-            logger.error(f"发送邮件失败: {e}")
+            logger.error(f"发送邮件失败: {type(e).__name__}: {e}")
             return False
 
     @classmethod

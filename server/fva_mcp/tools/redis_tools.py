@@ -1,8 +1,3 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/01/02
-# @Author : sonder
-# @File : redis_tools.py
-# @Comment : Redis 操作工具
 
 import json
 from typing import Optional

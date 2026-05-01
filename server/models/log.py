@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/18 01:50
-# @UpdateTime : 2025/08/18 01:50
-# @Author : sonder
-# @File : log.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 from tortoise import fields
 
 from models.common import BaseModel

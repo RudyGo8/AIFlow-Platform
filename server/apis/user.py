@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/23 23:18
-# @UpdateTime : 2025/12/26
-# @Author : sonder
-# @File : user.py
-# @Software : PyCharm
-# @Comment : 用户管理 API - 完全使用 Casbin 管理权限（方案C）
+
 from typing import Optional
 from datetime import datetime
 

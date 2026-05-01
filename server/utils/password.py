@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/04 01:38
-# @UpdateTime : 2025/08/04 01:38
-# @Author : sonder
-# @File : password.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 import hashlib
 
 from utils.config import config

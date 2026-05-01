@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/25 02:04
-# @UpdateTime : 2025/12/26
-# @Author : sonder
-# @File : permission.py
-# @Software : PyCharm
-# @Comment : 权限管理 API - 完全使用 Casbin 管理权限（方案C）
+
 from typing import Optional, List
 
 from fastapi import APIRouter, Depends, Path, Query, Request

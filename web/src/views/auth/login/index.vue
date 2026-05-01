@@ -251,6 +251,7 @@
         })
       }
     } catch (error) {
+      ElMessage.error(t('httpMsg.requestFailed'))
       console.error('Failed to load captcha:', error)
     }
   }

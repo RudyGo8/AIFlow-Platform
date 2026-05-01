@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/03 22:38
-# @UpdateTime : 2025/08/03 22:38
-# @Author : sonder
-# @File : database.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 import logging
 from typing import Dict, Any
 

@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2026/04/06 01:07
-# @Author : sonder
-# @File : system_dictionary_item.py
-# @Comment : 数据字典项表
+
 
 from tortoise import fields
 from models.common import BaseModel

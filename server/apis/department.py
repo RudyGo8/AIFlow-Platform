@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/24 23:25
-# @UpdateTime : 2025/12/26
-# @Author : sonder
-# @File : department.py
-# @Software : PyCharm
-# @Comment : 部门管理 API - 集成 Casbin 数据权限
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, Path, Request

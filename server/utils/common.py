@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/03 20:09
-# @UpdateTime : 2025/08/03 20:09
-# @Author : sonder
-# @File : common.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 from typing import List, Any, Optional, Type
 
 

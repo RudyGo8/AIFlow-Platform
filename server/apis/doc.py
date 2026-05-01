@@ -1,9 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/11/23 02:25
-# @Author : sonder
-# @File : doc.py
-# @Software : PyCharm
-# @Comment : API文档相关接口
+
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse

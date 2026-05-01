@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/04 01:55
-# @UpdateTime : 2025/08/04 01:55
-# @Author : sonder
-# @File : common.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 from typing import List
 
 from pydantic import BaseModel, Field, ConfigDict

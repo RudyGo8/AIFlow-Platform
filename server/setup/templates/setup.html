@@ -530,7 +530,7 @@
                             </div>
                             <div class="form-group">
                                 <label>端口 <span class="required">*</span></label>
-                                <input type="number" name="db_port" id="dbPort" value="3306">
+                                <input type="number" name="db_port" id="dbPort" value="3307">
                                 <div class="tip">MySQL 默认 3306，PostgreSQL 默认 5432</div>
                             </div>
                         </div>
@@ -561,20 +561,18 @@
                         Redis 缓存配置
                     </div>
                     <div class="section-desc">
-                        Redis 用于缓存用户会话、验证码等数据。支持内存模式（无需安装 Redis）和服务器模式（连接真实 Redis 服务）。
+                        Redis 用于缓存用户会话、验证码等数据，使用服务器模式连接真实 Redis 服务。
                     </div>
                     <div class="form-group full">
                         <label>运行模式 <span class="required">*</span></label>
                         <select name="redis_mode" id="redisMode" onchange="toggleRedisFields()" required>
-                            <option value="memory" selected>内存模式（推荐，无需 Redis 服务器）</option>
-                            <option value="server">服务器模式（连接真实 Redis）</option>
+                            <option value="server" selected>服务器模式（连接真实 Redis）</option>
                         </select>
                         <div class="tip">
-                            <strong>内存模式：</strong>使用内存模拟 Redis，适合开发和小规模部署，无需安装 Redis 服务器<br>
                             <strong>服务器模式：</strong>连接真实 Redis 服务器，适合生产环境和高并发场景
                         </div>
                     </div>
-                    <div id="redisServerFields" style="display: none;">
+                    <div id="redisServerFields" style="display: block;">
                         <div class="section-desc warning">
                             <strong>⚠️ Docker 部署注意：</strong>如果应用运行在 Docker 容器中，需要连接宿主机上的 Redis，请将主机地址填写为
                             <code>host.docker.internal</code>，而不是 <code>127.0.0.1</code>。
@@ -746,18 +744,10 @@
                 mode: redisMode
             };
 
-            if (redisMode === 'server') {
-                redisConfig.host = formData.get('redis_host');
-                redisConfig.port = parseInt(formData.get('redis_port'));
-                redisConfig.password = formData.get('redis_password');
-                redisConfig.database = parseInt(formData.get('redis_database'));
-            } else {
-                // 内存模式使用默认值
-                redisConfig.host = '127.0.0.1';
-                redisConfig.port = 6379;
-                redisConfig.password = '';
-                redisConfig.database = 1;
-            }
+            redisConfig.host = formData.get('redis_host');
+            redisConfig.port = parseInt(formData.get('redis_port'));
+            redisConfig.password = formData.get('redis_password');
+            redisConfig.database = parseInt(formData.get('redis_database'));
 
             return {
                 app: {
@@ -783,17 +773,8 @@
         }
 
         function toggleRedisFields() {
-            const mode = document.getElementById('redisMode').value;
             const serverFields = document.getElementById('redisServerFields');
-            const statusEl = document.getElementById('redisStatus');
-
-            if (mode === 'memory') {
-                serverFields.style.display = 'none';
-                statusEl.className = 'status';
-                statusEl.innerHTML = '';
-            } else {
-                serverFields.style.display = 'block';
-            }
+            serverFields.style.display = 'block';
         }
 
         function showStatus(elementId, type, message) {
@@ -830,12 +811,6 @@
 
         async function testRedis() {
             const data = getFormData();
-
-            // 内存模式无需测试
-            if (data.redis.mode === 'memory') {
-                showStatus('redisStatus', 'success', '内存模式无需测试连接，系统将使用内存模拟 Redis');
-                return;
-            }
 
             showStatus('redisStatus', 'loading', '正在测试 Redis 连接...');
             try {

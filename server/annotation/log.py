@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/19 01:34
-# @UpdateTime : 2025/08/19 01:34
-# @Author : sonder
-# @File : log.py
-# @Software : PyCharm
-# @Comment : 本程序
+
 from __future__ import annotations  # 兼容 Python 3.9 以下泛型
 
 import json

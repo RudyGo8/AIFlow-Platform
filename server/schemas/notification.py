@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2026/01/03 01:33
-# @Author : sonder
-# @File : notification.py
-# @Comment : 系统通知表
+
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict

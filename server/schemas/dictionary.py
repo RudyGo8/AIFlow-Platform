@@ -1,8 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2026/04/06 01:08
-# @Author : sonder
-# @File : dictionary.py
-# @Comment : 数据字典和字典项 Schema
+
 
 from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict

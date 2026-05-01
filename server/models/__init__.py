@@ -1,10 +1,4 @@
-# _*_ coding : UTF-8 _*_
-# @Time : 2025/08/01 00:12
-# @UpdateTime : 2025/12/28
-# @Author : sonder
-# @File : __init__.py
-# @Software : PyCharm
-# @Comment : 模型导出 - 权限管理已迁移至 Casbin
+
 
 # 导出系统模型
 from models.config import SystemConfig
