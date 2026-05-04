@@ -11,7 +11,7 @@ import { headerBarConfig } from './headerBar'
 const appConfig: SystemConfig = {
   // 系统信息
   systemInfo: {
-    name: 'FastAPI-Vue-Admin' // 系统名称
+    name: '企业AI驱动平台' // 系统名称
   },
   // 系统主题
   systemThemeStyles: {

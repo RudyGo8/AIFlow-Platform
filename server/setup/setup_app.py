@@ -7,7 +7,7 @@ from sqlalchemy import text
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from models.sa_orm import _DB, init_orm, close_orm, SADeclarativeBase
+from server.models.sa_orm import _DB, init_orm, close_orm, SADeclarativeBase
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 #  # (description)
@@ -211,7 +211,7 @@ def hash_password(password: str, salt: str) -> str:
 async def init_database_tables(db_config: DatabaseConfig):
     """Initialize database tables"""
     from sqlalchemy import text
-    from models.sa_orm import _DB, init_orm, close_orm, SADeclarativeBase
+    from server.models.sa_orm import _DB, init_orm, close_orm, SADeclarativeBase
     
     #  # (description)
     if db_config.engine == "sqlite":
@@ -332,7 +332,7 @@ async def init_database_tables(db_config: DatabaseConfig):
 async def init_admin_and_data(db_config: DatabaseConfig, admin_config: AdminConfig, jwt_salt: str):
     """ - ?JSON """
     from sqlalchemy import text
-    from models.sa_orm import _DB, init_orm, close_orm, SADeclarativeBase
+    from server.models.sa_orm import _DB, init_orm, close_orm, SADeclarativeBase
     from datetime import datetime
     import json
     

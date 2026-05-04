@@ -6,7 +6,7 @@
 initialized: true
 
 app:
-  name: "FastAPI-Vue-Admin"
+  name: "企业AI驱动平台"
   version: "1.0.7"
   host: "0.0.0.0"
   port: 9090

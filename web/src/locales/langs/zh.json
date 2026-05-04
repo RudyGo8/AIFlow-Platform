@@ -137,8 +137,8 @@
   },
   "login": {
     "leftView": {
-      "title": "FastAPI-Vue-Admin",
-      "subTitle": "基于 FastAPI + Tortoise-ORM + Vue 3 + Element Plus 的现代化后台管理系统模板"
+      "title": "企业AI驱动平台",
+      "subTitle": "集成 RAG 知识库 · 智能问答 · 文档管理 · 企业级 AI 中台"
     },
     "title": "欢迎回来",
     "subTitle": "输入您的账号和密码登录",
@@ -359,6 +359,11 @@
     },
     "myNotification": {
       "title": "我的通知"
+    },
+    "rag": {
+      "title": "知源助手",
+      "chat": "智能问答",
+      "documents": "文档管理"
     },
     "externalLinks": {
       "title": "外部链接",

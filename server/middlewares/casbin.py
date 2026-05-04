@@ -44,6 +44,7 @@ LOGIN_ONLY_LIST: List[str] = [
     "/api/user/updatePhone",
     "/api/file/upload/avatar",
     "/api/dashboard/",
+    "/api/ai/",
     "/api/department/all",
     "/api/department/tree",
     "/api/department/list",

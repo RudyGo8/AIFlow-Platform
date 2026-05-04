@@ -360,6 +360,11 @@
     "myNotification": {
       "title": "My Notifications"
     },
+    "rag": {
+      "title": "ZhiYuan AI",
+      "chat": "Chat",
+      "documents": "Documents"
+    },
     "externalLinks": {
       "title": "External Links",
       "apifoxDocs": "Apifox Docs",

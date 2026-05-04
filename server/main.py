@@ -1,9 +1,14 @@
+import sys
+from pathlib import Path
 
+# 确保 server/ 在 Python path（适配从项目根目录启动）
+_SERVER_DIR = Path(__file__).resolve().parent
+if str(_SERVER_DIR) not in sys.path:
+    sys.path.insert(0, str(_SERVER_DIR))
 
 import asyncio
 import uvicorn
 from contextlib import asynccontextmanager
-from pathlib import Path
 from utils.config import config
 from utils.database import init_db, close_db
 from utils.get_redis import RedisUtil
@@ -42,6 +47,15 @@ async def lifespan(app: FastAPI):
     # 4. 初始化 Casbin 权限
     print("  - 初始化 Casbin 权限...")
     await CasbinEnforcer.init(app.state.redis)
+
+    # 5. 初始化 AI 知识库模块 (RAG Agent)
+    print("  - 初始化 AI 知识库...")
+    from ai.router import init_rag_db, create_ai_router, patch_rag_auth
+    init_rag_db()
+    patch_rag_auth(app)
+    ai_router = create_ai_router()
+    app.include_router(ai_router)
+    print("  - AI 知识库路由已挂载 -> /api/ai/*")
 
     print(f"\n[OK] {config.app().name} 启动完成!\n")
 

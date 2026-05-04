@@ -701,8 +701,40 @@ async def get_base_public_routes() -> list:
                     }
                 }
             ]
-        }
-    ]
+        },
+        {
+            "name": "Rag",
+        "path": "/rag",
+        "component": "/index/index",
+        "meta": {
+            "title": "menus.rag.title",
+            "icon": "🤖",
+            "order": 10
+        },
+        "children": [
+            {
+                "name": "RagChat",
+                "path": "/rag/chat",
+                "component": "/rag/chat/index",
+                "meta": {
+                    "title": "menus.rag.chat",
+                    "icon": "&#xe6c2;",
+                    "keepAlive": True
+                }
+            },
+            {
+                "name": "RagDocuments",
+                "path": "/rag/documents",
+                "component": "/rag/documents/index",
+                "meta": {
+                    "title": "menus.rag.documents",
+                    "icon": "&#xe727;",
+                    "keepAlive": False
+                }
+            }
+        ]
+    }
+]
 
 
 async def get_menu_auth_list(menu_id: str, button_permissions: list, user_type: int = 3) -> list:

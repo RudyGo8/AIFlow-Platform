@@ -1,7 +1,7 @@
 <!-- 系统logo -->
 <template>
   <div class="art-logo">
-    <img :style="logoStyle" src="@imgs/common/logo.png" alt="logo" />
+    <img :style="logoStyle" src="../../../../assets/img/common/logo.png" alt="logo" />
   </div>
 </template>
 
@@ -14,7 +14,7 @@
   }
 
   const props = withDefaults(defineProps<Props>(), {
-    size: 36
+    size: 50
   })
 
   const logoStyle = computed(() => ({ width: `${props.size}px` }))

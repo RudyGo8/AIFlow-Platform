@@ -216,7 +216,20 @@ class NotificationService:
         browser: str,
         os: str
     ):
-        """发送登录通知 - 创建数据库记录并推送"""
+        """发送登录通知 - 每6小时最多提醒一次"""
+        # 检查上次通知时间，6小时内不重复发送
+        throttle_key = f"{self.NOTIFICATION_KEY}:login_throttle:{user_id}"
+        last_time = await self._redis.get(throttle_key)
+        if last_time:
+            try:
+                last_dt = datetime.fromisoformat(last_time)
+                if datetime.now() - last_dt < timedelta(hours=6):
+                    logger.info(f"登录通知节流: user_id={user_id}, 上次通知={last_time}")
+                    return
+            except Exception:
+                pass
+        await self._redis.setex(throttle_key, timedelta(hours=6), datetime.now().isoformat())
+
         # 创建登录通知记录
         notification = await SystemNotification.create(
             title="登录提醒",
