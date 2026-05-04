@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI
 
+from utils.config import config as app_config
 from apis.auth import authAPI
 from apis.cache import cacheAPI
 from apis.casbin import casbinAPI
@@ -100,5 +101,6 @@ def register_api(app: FastAPI) -> None:
     """
     注册路由
     """
+    api_prefix = app_config.app().api_prefix
     for api in api_list:
-        app.include_router(router=api.get("api"), tags=api.get("tags"))
+        app.include_router(router=api.get("api"), prefix=api_prefix, tags=api.get("tags"))

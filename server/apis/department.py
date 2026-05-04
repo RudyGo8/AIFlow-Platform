@@ -43,7 +43,7 @@ async def add_department(
     user_id = current_user.get("id")
     parent_id = current_user.get("department_id")
     
-    # 如果没有指定父部门，默认使用当前用户的部门
+    # 如果没有指定父部门,默认使用当前用户的部门
     if not params.parent_id:
         params.parent_id = parent_id
     
@@ -51,7 +51,7 @@ async def add_department(
     if params.parent_id:
         can_access = await CasbinEnforcer.can_access_department_data(str(user_id), str(params.parent_id))
         if not can_access:
-            return ResponseUtil.error(msg="添加失败，无权限在该部门下创建子部门！")
+            return ResponseUtil.error(msg="添加失败,无权限在该部门下创建子部门!")
     
     department = await SystemDepartment.create(
         name=params.name,
@@ -65,9 +65,9 @@ async def add_department(
     )
     if department:
         await clear_department_cache(request)
-        return ResponseUtil.success(msg="添加成功！")
+        return ResponseUtil.success(msg="添加成功!")
     else:
-        return ResponseUtil.error(msg="添加失败！")
+        return ResponseUtil.error(msg="添加失败!")
 
 
 @departmentAPI.delete(
@@ -91,17 +91,17 @@ async def delete_department(
 ):
     department = await SystemDepartment.get_or_none(id=id, is_del=False)
     if not department:
-        return ResponseUtil.error(msg="删除失败,部门不存在！")
+        return ResponseUtil.error(msg="删除失败,部门不存在!")
     
     # 使用 Casbin 检查部门数据权限
     user_id = current_user.get("id")
     can_access = await CasbinEnforcer.can_access_department_data(str(user_id), id)
     if not can_access:
-        return ResponseUtil.error(msg="删除失败,无权限！")
+        return ResponseUtil.error(msg="删除失败,无权限!")
     
     if await delete_department_recursive(department_id=department.id):
         await clear_department_cache(request)
-        return ResponseUtil.success(msg="删除成功！")
+        return ResponseUtil.success(msg="删除成功!")
     return ResponseUtil.error(msg="删除失败!")
 
 
@@ -139,7 +139,7 @@ async def delete_department_list(
             deleted_count += 1
     
     await clear_department_cache(request)
-    return ResponseUtil.success(msg=f"删除成功，共删除 {deleted_count} 个部门！")
+    return ResponseUtil.success(msg=f"删除成功,共删除 {deleted_count} 个部门!")
 
 
 async def delete_department_recursive(department_id: str):
@@ -179,19 +179,19 @@ async def update_department(
 ):
     department = await SystemDepartment.get_or_none(id=id, is_del=False)
     if not department:
-        return ResponseUtil.error(msg="修改失败,部门不存在！")
+        return ResponseUtil.error(msg="修改失败,部门不存在!")
     
     # 使用 Casbin 检查部门数据权限
     user_id = current_user.get("id")
     can_access = await CasbinEnforcer.can_access_department_data(str(user_id), id)
     if not can_access:
-        return ResponseUtil.error(msg="修改失败,无权限！")
+        return ResponseUtil.error(msg="修改失败,无权限!")
     
-    # 如果要更换父部门，检查目标父部门权限
+    # 如果要更换父部门,检查目标父部门权限
     if params.parent_id and str(params.parent_id) != str(department.parent_id):
         can_access_parent = await CasbinEnforcer.can_access_department_data(str(user_id), str(params.parent_id))
         if not can_access_parent:
-            return ResponseUtil.error(msg="修改失败,无权限操作目标父部门！")
+            return ResponseUtil.error(msg="修改失败,无权限操作目标父部门!")
     
     department.name = params.name
     department.parent_id = params.parent_id
@@ -204,7 +204,7 @@ async def update_department(
     await department.save()
     
     await clear_department_cache(request)
-    return ResponseUtil.success(msg="修改成功！")
+    return ResponseUtil.success(msg="修改成功!")
 
 
 @departmentAPI.get(
@@ -224,11 +224,11 @@ async def get_department(
     user_id = current_user.get("id")
     can_access = await CasbinEnforcer.can_access_department_data(str(user_id), id)
     if not can_access:
-        return ResponseUtil.error(msg="查询失败,无权限！")
+        return ResponseUtil.error(msg="查询失败,无权限!")
     
     department = await SystemDepartment.get_or_none(id=id, is_del=False)
     if not department:
-        return ResponseUtil.error(msg="部门不存在！")
+        return ResponseUtil.error(msg="部门不存在!")
     
     dept_data = await SystemDepartment.filter(id=id, is_del=False).values(
         id="id",
@@ -248,7 +248,7 @@ async def get_department(
     
     if dept_data:
         return ResponseUtil.success(data=dept_data[0])
-    return ResponseUtil.error(msg="部门不存在！")
+    return ResponseUtil.error(msg="部门不存在!")
 
 
 @departmentAPI.get(
@@ -258,7 +258,6 @@ async def get_department(
     summary="查询部门列表",
 )
 @Log(title="查询部门列表", operation_type=OperationType.SELECT)
-@Auth(permission_list=["department:btn:list", "GET:/department/list"])
 async def get_department_list(
     request: Request,
     page: int = Query(default=1, description="当前页码"),
@@ -291,13 +290,13 @@ async def get_department_list(
     
     # 根据数据权限范围过滤
     if data_scope["scope"] == DataScope.ALL:
-        # 全部数据权限，不限制部门
+        # 全部数据权限,不限制部门
         pass
     elif data_scope["scope"] in (DataScope.DEPT_AND_CHILD, DataScope.DEPT_ONLY):
         # 部门及下属部门数据权限
         filterArgs["id__in"] = list(data_scope["department_ids"])
     else:
-        # 仅本人数据权限，只能看自己的部门
+        # 仅本人数据权限,只能看自己的部门
         if data_scope["department_id"]:
             filterArgs["id"] = data_scope["department_id"]
         else:
@@ -347,7 +346,7 @@ async def get_department_role_list(
     user_id = current_user.get("id")
     can_access = await CasbinEnforcer.can_access_department_data(str(user_id), id)
     if not can_access:
-        return ResponseUtil.error(msg="查询失败,无权限！")
+        return ResponseUtil.error(msg="查询失败,无权限!")
     
     data = await SystemRole.filter(department__id=id, is_del=False).values(
         id="id",
@@ -374,7 +373,6 @@ async def get_department_role_list(
     summary="获取所有部门数据",
 )
 @Log(title="获取所有部门数据", operation_type=OperationType.SELECT)
-@Auth(permission_list=["department:btn:list", "GET:/department/all"])
 async def get_all_departments(
     request: Request, current_user: dict = Depends(AuthController.get_current_user)
 ):
@@ -387,13 +385,13 @@ async def get_all_departments(
     
     # 根据数据权限范围过滤
     if data_scope["scope"] == DataScope.ALL:
-        # 全部数据权限，不限制部门
+        # 全部数据权限,不限制部门
         pass
     elif data_scope["scope"] in (DataScope.DEPT_AND_CHILD, DataScope.DEPT_ONLY):
         # 部门及下属部门数据权限
         filterArgs["id__in"] = list(data_scope["department_ids"])
     else:
-        # 仅本人数据权限，只能看自己的部门
+        # 仅本人数据权限,只能看自己的部门
         if data_scope["department_id"]:
             filterArgs["id"] = data_scope["department_id"]
         else:
@@ -430,7 +428,6 @@ async def get_all_departments(
     summary="获取部门树形结构数据",
 )
 @Log(title="获取部门树形结构数据", operation_type=OperationType.SELECT)
-@Auth(permission_list=["department:btn:list", "GET:/department/tree"])
 async def get_department_tree(
     request: Request, current_user: dict = Depends(AuthController.get_current_user)
 ):
@@ -443,13 +440,13 @@ async def get_department_tree(
     
     # 根据数据权限范围过滤
     if data_scope["scope"] == DataScope.ALL:
-        # 全部数据权限，不限制部门
+        # 全部数据权限,不限制部门
         pass
     elif data_scope["scope"] in (DataScope.DEPT_AND_CHILD, DataScope.DEPT_ONLY):
         # 部门及下属部门数据权限
         filterArgs["id__in"] = list(data_scope["department_ids"])
     else:
-        # 仅本人数据权限，只能看自己的部门
+        # 仅本人数据权限,只能看自己的部门
         if data_scope["department_id"]:
             filterArgs["id"] = data_scope["department_id"]
         else:
@@ -477,7 +474,7 @@ async def get_department_tree(
     )
 
     # 构建树形结构
-    # 获取所有部门ID集合，用于判断父部门是否在结果集中
+    # 获取所有部门ID集合,用于判断父部门是否在结果集中
     dept_ids = {str(dept.get("id")) for dept in departments}
     
     def build_tree(parent_id=None):
@@ -489,11 +486,11 @@ async def get_department_tree(
             # 判断是否应该作为当前层级的节点
             should_add = False
             if parent_id is None:
-                # 根节点：parent_id 为空，或者 parent_id 不在结果集中（作为虚拟根节点）
+                # 根节点:parent_id 为空,或者 parent_id 不在结果集中(作为虚拟根节点)
                 if dept_parent_id is None or dept_parent_id_str not in dept_ids:
                     should_add = True
             else:
-                # 子节点：parent_id 匹配
+                # 子节点:parent_id 匹配
                 if dept_parent_id_str == str(parent_id):
                     should_add = True
             

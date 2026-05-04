@@ -50,7 +50,7 @@ axiosInstance.interceptors.request.use(
     const { accessToken } = useUserStore()
     if (accessToken) request.headers.set('Authorization', `Bearer ${accessToken}`)
 
-    if (request.data && !(request.data instanceof FormData) && !request.headers['Content-Type']) {
+    if (request.data && !(request.data instanceof FormData) && !request.headers.get('Content-Type')) {
       request.headers.set('Content-Type', 'application/json')
       request.data = JSON.stringify(request.data)
     }

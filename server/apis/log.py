@@ -62,7 +62,7 @@ async def get_login_log(
                     if session_id:
                         session_ids.append(session_id)
                 except Exception:
-                    # Token 解析失败，跳过
+                    # Token 解析失败,跳过
                     pass
         return session_ids
 
@@ -90,12 +90,9 @@ async def get_login_log(
 
     # 根据用户身份过滤数据
     if user_type in [0, 1]:
-        # 超级管理员和管理员可以查看所有用户的登录日志
+        # 超级管理员和管理员可以查看所有，仅在有明确部门筛选时添加过滤
         if department_id:
             filterArgs["user_id__department__id"] = department_id
-        elif sub_departments:
-            filterArgs["user_id__department__id__in"] = sub_departments
-        # 如果 sub_departments 为空，超管/管理员不加部门过滤，可以看所有
     elif user_type == 2:
         # 部门管理员可以查看本部门及下属部门的登录日志
         if department_id:
@@ -103,7 +100,7 @@ async def get_login_log(
         elif sub_departments:
             filterArgs["user_id__department__id__in"] = sub_departments
         else:
-            # 如果没有可访问的部门，返回空结果
+            # 如果没有可访问的部门,返回空结果
             return ResponseUtil.success(
                 data={
                     "total": 0,
@@ -123,7 +120,7 @@ async def get_login_log(
         .limit(pageSize)
         .values(
             id="id",
-            user_id="user_id_id",
+            user_id="user_id",
             username="user_id__username",
             user_nickname="user_id__nickname",
             department_id="user_id__department__id",
@@ -179,12 +176,12 @@ async def logout_user(
 
     # 根据用户身份验证权限
     if user_type in [0, 1, 2]:
-        # 超级管理员、管理员、部门管理员：可以强退其可访问范围内的用户
+        # 超级管理员、管理员、部门管理员:可以强退其可访问范围内的用户
         log = await SystemLoginLog.get_or_none(
             user_id__department__id__in=sub_departments, session_id=id, is_del=False
         )
     else:
-        # 普通用户：只能强退自己的会话
+        # 普通用户:只能强退自己的会话
         log = await SystemLoginLog.get_or_none(
             user_id=current_user.get("id"), session_id=id, is_del=False
         )
@@ -194,9 +191,9 @@ async def logout_user(
             await request.app.state.redis.delete(
                 f"{RedisKeyConfig.ACCESS_TOKEN.key}:{id}"
             )
-            return ResponseUtil.success(msg="强退成功！")
+            return ResponseUtil.success(msg="强退成功!")
 
-    return ResponseUtil.failure(msg="会话不存在！")
+    return ResponseUtil.failure(msg="会话不存在!")
 
 
 @logAPI.delete(
@@ -224,12 +221,12 @@ async def logout_user_list(
     for id in params.ids:
         # 根据用户身份验证权限
         if user_type in [0, 1, 2]:
-            # 超级管理员、管理员、部门管理员：可以强退其可访问范围内的用户
+            # 超级管理员、管理员、部门管理员:可以强退其可访问范围内的用户
             log = await SystemLoginLog.get_or_none(
                 user_id__department__id__in=sub_departments, session_id=id, is_del=False
             )
         else:
-            # 普通用户：只能强退自己的会话
+            # 普通用户:只能强退自己的会话
             log = await SystemLoginLog.get_or_none(
                 user_id=current_user.get("id"), session_id=id, is_del=False
             )
@@ -241,7 +238,7 @@ async def logout_user_list(
                 f"{RedisKeyConfig.ACCESS_TOKEN.key}:{id}"
             )
 
-    return ResponseUtil.success(msg="批量强退成功！")
+    return ResponseUtil.success(msg="批量强退成功!")
 
 
 @logAPI.delete(
@@ -268,12 +265,12 @@ async def delete_login_log(
 
     # 根据用户身份验证权限
     if user_type in [0, 1, 2]:
-        # 超级管理员、管理员、部门管理员：可以删除其可访问范围内的日志
+        # 超级管理员、管理员、部门管理员:可以删除其可访问范围内的日志
         log = await SystemLoginLog.get_or_none(
             id=id, user_id__department__id__in=sub_departments, is_del=False
         )
     else:
-        # 普通用户：只能删除自己的日志
+        # 普通用户:只能删除自己的日志
         log = await SystemLoginLog.get_or_none(
             id=id, user_id=current_user.get("id"), is_del=False
         )
@@ -289,7 +286,7 @@ async def delete_login_log(
             )
         return ResponseUtil.success(msg="删除成功")
     else:
-        return ResponseUtil.failure(msg="删除失败,登录日志不存在！")
+        return ResponseUtil.failure(msg="删除失败,登录日志不存在!")
 
 
 @logAPI.delete(
@@ -317,12 +314,12 @@ async def delete_login_log_list(
     for id in set(params.ids):
         # 根据用户身份验证权限
         if user_type in [0, 1, 2]:
-            # 超级管理员、管理员、部门管理员：可以删除其可访问范围内的日志
+            # 超级管理员、管理员、部门管理员:可以删除其可访问范围内的日志
             log = await SystemLoginLog.get_or_none(
                 id=id, user_id__department__id__in=sub_departments, is_del=False
             )
         else:
-            # 普通用户：只能删除自己的日志
+            # 普通用户:只能删除自己的日志
             log = await SystemLoginLog.get_or_none(
                 id=id, user_id=current_user.get("id"), is_del=False
             )
@@ -384,12 +381,9 @@ async def get_operation_log(
 
     # 根据用户身份过滤数据
     if user_type in [0, 1]:
-        # 超级管理员和管理员可以查看所有用户的操作日志
+        # 超级管理员和管理员可以查看所有，仅在有明确部门筛选时添加过滤
         if department_id:
             filterArgs["operator__department__id"] = department_id
-        elif sub_departments:
-            filterArgs["operator__department__id__in"] = sub_departments
-        # 如果 sub_departments 为空，超管/管理员不加部门过滤，可以看所有
     elif user_type == 2:
         # 部门管理员可以查看本部门及下属部门的操作日志
         if department_id:
@@ -397,7 +391,7 @@ async def get_operation_log(
         elif sub_departments:
             filterArgs["operator__department__id__in"] = sub_departments
         else:
-            # 如果没有可访问的部门，返回空结果
+            # 如果没有可访问的部门,返回空结果
             return ResponseUtil.success(
                 data={
                     "total": 0,
@@ -411,7 +405,7 @@ async def get_operation_log(
         filterArgs["operator_id"] = user_id
     result = (
         await SystemOperationLog.filter(
-            **filterArgs, operator__is_del=False, is_del=False
+            **filterArgs, is_del=False
         )
         .offset((page - 1) * pageSize)
         .limit(pageSize)
@@ -442,7 +436,7 @@ async def get_operation_log(
     return ResponseUtil.success(
         data={
             "total": await SystemOperationLog.filter(
-                **filterArgs, is_del=False, operator__is_del=False
+                **filterArgs, is_del=False
             ).count(),
             "result": result,
             "page": page,
@@ -475,12 +469,12 @@ async def delete_operation_log(
 
     # 根据用户身份验证权限
     if user_type in [0, 1, 2]:
-        # 超级管理员、管理员、部门管理员：可以删除其可访问范围内的日志
+        # 超级管理员、管理员、部门管理员:可以删除其可访问范围内的日志
         log = await SystemOperationLog.get_or_none(
             id=id, operator__department__id__in=sub_departments, is_del=False
         )
     else:
-        # 普通用户：只能删除自己的日志
+        # 普通用户:只能删除自己的日志
         log = await SystemOperationLog.get_or_none(
             id=id, operator_id=current_user.get("id"), is_del=False
         )
@@ -490,7 +484,7 @@ async def delete_operation_log(
         await log.save()
         return ResponseUtil.success(msg="删除成功")
     else:
-        return ResponseUtil.failure(msg="删除失败,操作日志不存在！")
+        return ResponseUtil.failure(msg="删除失败,操作日志不存在!")
 
 
 @logAPI.delete(
@@ -517,14 +511,14 @@ async def delete_operation_log_list(
 
     # 根据用户身份过滤可删除的日志
     if user_type in [0, 1, 2]:
-        # 超级管理员、管理员、部门管理员：可以删除其可访问范围内的日志
+        # 超级管理员、管理员、部门管理员:可以删除其可访问范围内的日志
         await SystemOperationLog.filter(
             id__in=list(set(params.ids)),
             operator__department__id__in=sub_departments,
             is_del=False,
         ).update(is_del=True)
     else:
-        # 普通用户：只能删除自己的日志
+        # 普通用户:只能删除自己的日志
         await SystemOperationLog.filter(
             id__in=list(set(params.ids)),
             operator_id=current_user.get("id"),
@@ -594,7 +588,7 @@ async def get_personal_login_log(
         .limit(pageSize)
         .values(
             id="id",
-            user_id="user_id_id",
+            user_id="user_id",
             username="user_id__username",
             user_nickname="user_id__nickname",
             department_id="user_id__department__id",
@@ -659,11 +653,11 @@ async def personal_logout_user(
             await request.app.state.redis.delete(
                 f"{RedisKeyConfig.ACCESS_TOKEN.key}:{id}"
             )
-            return ResponseUtil.success(msg="强退成功！")
+            return ResponseUtil.success(msg="强退成功!")
         else:
-            return ResponseUtil.failure(msg="强退失败,会话不存在！")
+            return ResponseUtil.failure(msg="强退失败,会话不存在!")
     else:
-        return ResponseUtil.failure(msg="强退失败,登录日志不存在！")
+        return ResponseUtil.failure(msg="强退失败,登录日志不存在!")
 
 
 @logAPI.get(
@@ -686,7 +680,7 @@ async def get_personal_operation_log(
 ):
     """
     获取当前登录用户的个人操作日志
-    无论用户身份如何，只返回当前用户自己的操作记录
+    无论用户身份如何,只返回当前用户自己的操作记录
     """
     user_id = current_user.get("id")
     
@@ -751,7 +745,7 @@ async def get_personal_operation_log(
     return ResponseUtil.success(
         data={
             "total": await SystemOperationLog.filter(
-                **filterArgs, is_del=False, operator__is_del=False
+                **filterArgs, is_del=False
             ).count(),
             "result": result,
             "page": page,

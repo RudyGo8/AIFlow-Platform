@@ -6,7 +6,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Request, Depends
 from starlette.responses import JSONResponse
-from tortoise.expressions import Q
+from models.sa_orm import Q
 
 from annotation.auth import CustomOAuth2PasswordRequestForm, AuthController
 from annotation.log import Log, OperationType
@@ -40,22 +40,30 @@ authAPI = APIRouter(prefix="/auth")
 
 
 def get_login_meta(request: Request) -> dict:
-    """获取登录请求的元数据，包括地理位置"""
+    """Build request metadata"""
     meta = _request_meta(request)
-    # 添加地理位置信息
+    #  # (description)
     meta["location"] = (
         get_ip_location(meta["ip"])
         if config.app().ip_location_enabled
-        else "内网IP"
+        else "IP"
     )
     return meta
+
+
+async def safe_create_login_log(**kwargs) -> None:
+    """Do not let login-log persistence failures break the login flow."""
+    try:
+        await SystemLoginLog.create(**kwargs)
+    except Exception:
+        logger.exception("Failed to persist system login log")
 
 
 @authAPI.get(
     "/captcha",
     response_class=JSONResponse,
     response_model=GetCaptchaResponse,
-    summary="获取验证码",
+    summary="Get captcha",
 )
 async def get_captcha(request: Request):
     captcha_enabled = (
@@ -82,7 +90,7 @@ async def get_captcha(request: Request):
             if await request.app.state.redis.get(
                 f"{RedisKeyConfig.SYSTEM_CONFIG.key}:account_captcha_type"
             )
-            else "0"  # 默认使用算术题验证码
+            else "0"  # 
         )
         captcha_result = await CaptchaUtil.create_captcha(captcha_type)
         session_id = str(uuid.uuid4())
@@ -93,7 +101,7 @@ async def get_captcha(request: Request):
             result,
             ex=timedelta(minutes=2),
         )
-        logger.info(f"编号为{session_id}的会话获取图片验证码成功")
+        logger.info(f"Captcha session: {session_id}")
 
         return ResponseUtil.success(
             data={
@@ -101,7 +109,7 @@ async def get_captcha(request: Request):
                 "captcha": captcha,
                 "captcha_enabled": captcha_enabled,
                 "register_enabled": register_enabled,
-                "captcha_type": captcha_type,  # 返回验证码类型：0=算术题，1=字母数字
+                "captcha_type": captcha_type,  # 0=1=
             }
         )
     else:
@@ -111,13 +119,13 @@ async def get_captcha(request: Request):
                 "captcha": None,
                 "captcha_enabled": captcha_enabled,
                 "register_enabled": register_enabled,
-                "captcha_type": "0",  # 即使未启用也返回默认类型
+                "captcha_type": "0",  #    
             }
         )
 
 
-@authAPI.post("/login", response_class=JSONResponse, summary="登录")
-@Log(operation_type=OperationType.GRANT, title="登录", log_type="login")
+@authAPI.post("/login", response_class=JSONResponse, summary="")
+@Log(operation_type=OperationType.GRANT, title="", log_type="login")
 async def login(request: Request, params: CustomOAuth2PasswordRequestForm = Depends()):
     user = LoginParams(
         username=params.username,
@@ -134,7 +142,7 @@ async def login(request: Request, params: CustomOAuth2PasswordRequestForm = Depe
         == "true"
         else False
     )
-    # 判断请求是否来自于api文档，如果是返回指定格式的结果，用于修复api文档认证成功后token显示undefined的bug
+    #  # (description)
     request_from_swagger = (
         request.headers.get("referer").endswith("docs")
         if request.headers.get("referer")
@@ -146,7 +154,7 @@ async def login(request: Request, params: CustomOAuth2PasswordRequestForm = Depe
         else False
     )
 
-    # 验证码校验，如果开启验证码校验，则进行验证码校验，如果关闭则跳过验证码校验. 如果请求来自api文档，则跳过验证码校验
+    #  # (description)
     if captcha_enabled and not request_from_redoc and not request_from_swagger:
         result = await CaptchaUtil.verify_code(
             request, code=user.code, session_id=user.uuid
@@ -163,21 +171,21 @@ async def login(request: Request, params: CustomOAuth2PasswordRequestForm = Depe
             plain_password=params.password, hashed_password=user.password
         ):
             userInfo = await AuthController.get_user_info(user.id)
-            logger.info(f"用户{user.username}登录成功")
+            logger.info(f"   {user.username}")
             session_id = uuid.uuid4().__str__()
             
-            # 记录登录日志
+            #  # (description)
             request_meta = get_login_meta(request)
-            await SystemLoginLog.create(
+            await safe_create_login_log(
                 user_id=user,
                 login_ip=request_meta["ip"],
                 login_location=request_meta["location"],
                 browser=request_meta["browser"],
                 os=request_meta["os"],
-                status=1,  # 登录成功
+                status=1,  # 
                 session_id=session_id
             )
-            # JWT Token中只存储不变的用户标识信息
+            # JWT Token  # (description)
             token_data = {
                 "id": user.id.__str__(),
                 "username": user.username,
@@ -199,7 +207,7 @@ async def login(request: Request, params: CustomOAuth2PasswordRequestForm = Depe
                 accessToken,
                 ex=timedelta(minutes=params.login_days * 24 * 60),
             )
-            # 将完整的用户信息存储到Redis中，包括动态权限信息
+            #  # (description)
 
             userInfoStr = json.dumps(userInfo, ensure_ascii=False, default=str)
             await request.app.state.redis.set(
@@ -207,10 +215,10 @@ async def login(request: Request, params: CustomOAuth2PasswordRequestForm = Depe
                 userInfoStr,
                 ex=timedelta(
                     minutes=params.login_days * 24 * 60
-                ),  # 与Token同样的过期时间
+                ),  # oken?
             )
             
-            # 发送登录通知
+            #  # (description)
             notification_service = NotificationService(request.app.state.redis)
             await notification_service.send_login_notification(
                 user_id=user.id.__str__(),
@@ -232,45 +240,47 @@ async def login(request: Request, params: CustomOAuth2PasswordRequestForm = Depe
                     data={"accessToken": accessToken, "refreshToken": refreshToken}
                 )
         else:
-            # 记录登录失败日志
+            #  # (description)
             request_meta = get_login_meta(request)
-            await SystemLoginLog.create(
+            await safe_create_login_log(
                 user_id=user,
                 login_ip=request_meta["ip"],
                 login_location=request_meta["location"],
                 browser=request_meta["browser"],
                 os=request_meta["os"],
-                status=0,  # 登录失败
+                status=0,  # 
                 session_id=None
             )
-            return ResponseUtil.error(msg="用户或密码错误！")
+            return ResponseUtil.error(msg="   ")
     else:
-        # 记录登录失败日志（用户不存在的情况）
+        #  # (description)
+        logger.warning(f"Login failed for nonexistent user: {params.username}")
+        return ResponseUtil.error(msg="Invalid username or password!")
         request_meta = get_login_meta(request)
-        await SystemLoginLog.create(
+        await safe_create_login_log(
             user_id=None,
             login_ip=request_meta["ip"],
             login_location=request_meta["location"],
             browser=request_meta["browser"],
             os=request_meta["os"],
-            status=0,  # 登录失败
+            status=0,  # 
             session_id=None
         )
-        return ResponseUtil.error(msg="用户或密码错误！")
+        return ResponseUtil.error(msg="   ")
 
 
 @authAPI.post(
     "/register",
     response_class=JSONResponse,
     response_model=LoginResponse,
-    summary="用户注册",
+    summary="      ",
 )
 async def register(request: Request, params: RegisterUserParams):
     async def _create_user(
         params: RegisterUserParams,
         department: Optional[SystemDepartment],
     ) -> Optional[SystemUser]:
-        """真正执行数据库写入，成功返回用户对象，否则返回 None。"""
+        """Create user"""
         hashed_pwd = await PasswordUtil.get_password_hash(
             input_password=params.password
         )
@@ -288,7 +298,7 @@ async def register(request: Request, params: RegisterUserParams):
     redis = request.app.state.redis
     key = f"{RedisKeyConfig.SYSTEM_CONFIG.key}"
 
-    # 并行读取 4 个配置
+    #  # (description)
     (
         captcha_enabled,
         register_enabled,
@@ -304,9 +314,9 @@ async def register(request: Request, params: RegisterUserParams):
     register_enabled = register_enabled == "true"
 
     if not register_enabled:
-        return ResponseUtil.error(msg="注册功能已关闭！")
+        return ResponseUtil.error(msg="   ")
 
-    # 验证码校验
+    #  # (description)
     if captcha_enabled:
         result = await Email.verify_code(
             request, username=params.username, mail=params.email, code=params.code
@@ -314,53 +324,53 @@ async def register(request: Request, params: RegisterUserParams):
         if not result["status"]:
             return ResponseUtil.error(msg=result["msg"])
 
-    # 重名校验
+    #  # (description)
     if await SystemUser.get_or_none(username=params.username, is_del=False):
-        return ResponseUtil.error(msg="注册失败，用户已存在！")
+        return ResponseUtil.error(msg="Registration failed, user already exists")
 
-    # 确定部门
+    #  # (description)
     dept_id = params.department_id or default_dept_id
     department: Optional[SystemDepartment] = None
     if dept_id and (
         department := await SystemDepartment.get_or_none(id=dept_id, is_del=False)
     ):
-        pass  # 已找到部门
-    # 如果 dept_id 为空或部门不存在，department 保持 None
+        pass  # ?
+    #  # (description)
 
-    # 统一创建用户
+    #  # (description)
     user = await _create_user(params, department)
     if not user:
-        return ResponseUtil.error(msg="注册失败！")
+        return ResponseUtil.error(msg="Registration failed")
 
-    # 绑定默认角色
+    #  # (description)
     if default_role_id:
         await SystemUserRole.create(user_id=user.id, role_id=default_role_id)
 
-    return ResponseUtil.success(msg="注册成功！")
+    return ResponseUtil.success(msg="Registration successful")
 
 
 @authAPI.post(
     "/code",
     response_class=JSONResponse,
     response_model=BaseResponse,
-    summary="获取邮件验证码",
+    summary="Get email verification code",
 )
 async def get_code(request: Request, params: GetEmailCodeParams):
     result = await Email.send_email(
         request, username=params.username, title=params.title, mail=params.mail
     )
     if result:
-        return ResponseUtil.success(msg="验证码发送成功！")
-    return ResponseUtil.error(msg="验证码发送失败！")
+        return ResponseUtil.success(msg="")
+    return ResponseUtil.error(msg="      ")
 
 
 @authAPI.get(
     "/info",
     response_class=JSONResponse,
     response_model=GetUserInfoResponse,
-    summary="获取用户信息",
+    summary="   ",
 )
-@Log(title="获取用户信息", operation_type=OperationType.SELECT)
+@Log(title="   ", operation_type=OperationType.SELECT)
 async def info(
     request: Request, current_user: dict = Depends(AuthController.get_current_user)
 ):
@@ -372,9 +382,9 @@ async def info(
     "/routes",
     response_class=JSONResponse,
     response_model=BaseResponse,
-    summary="获取用户路由",
+    summary="   ",
 )
-@Log(title="获取用户路由", operation_type=OperationType.SELECT)
+@Log(title="   ", operation_type=OperationType.SELECT)
 async def get_user_routes(
     request: Request, current_user: dict = Depends(AuthController.get_current_user)
 ):
@@ -384,21 +394,14 @@ async def get_user_routes(
     if permission_cache:
         return ResponseUtil.success(data=json.loads(permission_cache))
     uid = current_user.get("id")
-    # 获取用户身份等级
     user_type = current_user.get("user_type", 3)
-    
-    # 使用 Casbin 获取用户的菜单权限
-    from utils.casbin import CasbinEnforcer
-    user_permissions = await CasbinEnforcer.get_user_permissions(str(uid))
-    menu_ids = user_permissions["menus"]
-    
-    # 获取菜单权限详情，并根据用户身份过滤
-    rolePermissions = []
-    if menu_ids:
+
+    from utils.casbin import CasbinEnforcer, UserType
+
+    # 超级管理员和管理员直接获取所有菜单/按钮权限
+    if user_type in (UserType.SUPER_ADMIN, UserType.ADMIN):
         rolePermissions = await SystemPermission.filter(
-            id__in=menu_ids,
-            menu_type=0,  # 只获取菜单类型
-            min_user_type__gte=user_type,  # 用户身份需满足权限要求
+            menu_type=0,
             is_del=False
         ).values(
             id="id",
@@ -427,15 +430,8 @@ async def get_user_routes(
             authMark="authMark",
             min_user_type="min_user_type",
         )
-    
-    # 获取按钮权限用于 authList
-    button_ids = user_permissions["buttons"]
-    buttonPermissions = []
-    if button_ids:
         buttonPermissions = await SystemPermission.filter(
-            id__in=button_ids,
-            menu_type=1,  # 按钮类型
-            min_user_type__gte=user_type,
+            menu_type=1,
             is_del=False
         ).values(
             id="id",
@@ -444,13 +440,63 @@ async def get_user_routes(
             authMark="authMark",
             min_user_type="min_user_type",
         )
+    else:
+        user_permissions = await CasbinEnforcer.get_user_permissions(str(uid))
+        menu_ids = user_permissions["menus"]
+
+        rolePermissions = []
+        if menu_ids:
+            rolePermissions = await SystemPermission.filter(
+                id__in=menu_ids,
+                menu_type=0,
+                min_user_type__gte=user_type,
+                is_del=False
+            ).values(
+                id="id",
+                created_at="created_at",
+                updated_at="updated_at",
+                menu_type="menu_type",
+                parent_id="parent_id",
+                component="component",
+                name="name",
+                title="title",
+                path="path",
+                icon="icon",
+                showBadge="showBadge",
+                showTextBadge="showTextBadge",
+                isHide="isHide",
+                isHideTab="isHideTab",
+                link="link",
+                isIframe="isIframe",
+                keepAlive="keepAlive",
+                isFirstLevel="isFirstLevel",
+                fixedTab="fixedTab",
+                activePath="activePath",
+                isFullPage="isFullPage",
+                order="order",
+                authTitle="authTitle",
+                authMark="authMark",
+                min_user_type="min_user_type",
+            )
+
+        button_ids = user_permissions["buttons"]
+        buttonPermissions = []
+        if button_ids:
+            buttonPermissions = await SystemPermission.filter(
+                id__in=button_ids,
+                menu_type=1,
+                min_user_type__gte=user_type,
+                is_del=False
+            ).values(
+                id="id",
+                parent_id="parent_id",
+                authTitle="authTitle",
+                authMark="authMark",
+                min_user_type="min_user_type",
+            )
 
     async def find_node_recursive(node_id: str, data: list) -> dict:
-        """
-        递归查找节点
-        :param node_id: 节点ID
-        :param data: 数据
-        """
+        """Find node recursively by ID"""
         result = {}
         data = list(filter(lambda x: x.get("menu_type") == 0, data))
         for item in data:
@@ -513,8 +559,8 @@ async def get_user_routes(
 
     async def find_complete_data(data: list) -> list:
         """
-        查找完整数据
-        :param data: 数据
+           
+        :param data: 
         """
         complete_data = []
         root_ids = [item["id"] for item in data if not item["parent_id"]]
@@ -523,8 +569,8 @@ async def get_user_routes(
         return complete_data
 
     permissions = await find_complete_data(rolePermissions)
-    
-    # 添加基础公共路由（所有用户都可以访问）
+
+    #  # (description)
     base_routes = await get_base_public_routes()
     all_routes = base_routes + permissions
     
@@ -538,8 +584,8 @@ async def get_user_routes(
 
 async def get_base_public_routes() -> list:
     """
-    获取基础公共路由（所有用户都可以访问的路由）
-    对应前端 src/router/routes/modules/base.ts 中定义的路由
+    
+     src/router/routes/modules/base.ts 
     """
     return [
         {
@@ -661,18 +707,18 @@ async def get_base_public_routes() -> list:
 
 async def get_menu_auth_list(menu_id: str, button_permissions: list, user_type: int = 3) -> list:
     """
-    获取指定菜单的按钮权限列表（已根据用户身份过滤）
-    :param menu_id: 菜单ID
-    :param button_permissions: 按钮权限数据（已过滤）
-    :param user_type: 用户身份等级
-    :return: 按钮权限列表
+       
+    :param menu_id: ID
+    :param button_permissions: ?
+    :param user_type:    
+    :return: 
     """
     auth_list = []
     for perm in button_permissions:
         if str(perm.get("parent_id")) == str(menu_id):
-            # 检查用户身份是否满足权限要求
+            #  # (description)
             min_required = perm.get("min_user_type", 3)
-            if user_type <= min_required:  # 用户身份等级越低，权限越高
+            if user_type <= min_required:  #    ?
                 if perm.get("authTitle") and perm.get("authMark"):
                     auth_list.append({
                         "title": perm["authTitle"], 
@@ -686,22 +732,22 @@ async def get_menu_auth_list(menu_id: str, button_permissions: list, user_type: 
     "/logout",
     response_class=JSONResponse,
     response_model=BaseResponse,
-    summary="用户登出",
+    summary="   ",
 )
-@Log(title="退出登录", operation_type=OperationType.GRANT)
+@Log(title="Logout", operation_type=OperationType.GRANT)
 async def logout(request: Request, status: bool = Depends(AuthController.logout)):
     if status:
-        return ResponseUtil.success(data="退出成功！")
-    return ResponseUtil.error(data="登出失败！")
+        return ResponseUtil.success(data="")
+    return ResponseUtil.error(data="Logout failed")
 
 
 @authAPI.post(
     "/refreshToken",
     response_class=JSONResponse,
     response_model=LoginResponse,
-    summary="刷新token",
+    summary="token",
 )
-@Log(title="刷新token", operation_type=OperationType.GRANT)
+@Log(title="token", operation_type=OperationType.GRANT)
 async def refresh_token(
     request: Request, current_user: dict = Depends(AuthController.get_current_user)
 ):

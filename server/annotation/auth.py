@@ -34,34 +34,34 @@ class CustomOAuth2PasswordRequestForm(OAuth2PasswordRequestForm):
         grant_type: str = Form(
             default="password",
             regex="password",
-            description="授权类型，固定为 'password'",
+            description="授权类型,固定为 'password'",
         ),
         username: str = Form(
-            ..., min_length=3, max_length=50, description="用户账号（3-50个字符）"
+            ..., min_length=3, max_length=50, description="用户账号(3-50个字符)"
         ),
-        password: str = Form(..., min_length=6, description="用户密码（至少6个字符）"),
-        scope: str = Form(default="", description="权限范围，多个用空格分隔"),
-        client_id: Optional[str] = Form(default=None, description="客户端ID（可选）"),
+        password: str = Form(..., min_length=6, description="用户密码(至少6个字符)"),
+        scope: str = Form(default="", description="权限范围,多个用空格分隔"),
+        client_id: Optional[str] = Form(default=None, description="客户端ID(可选)"),
         client_secret: Optional[str] = Form(
-            default=None, description="客户端密钥（可选）"
+            default=None, description="客户端密钥(可选)"
         ),
         login_days: Optional[int] = Form(
             default=1,
             ge=1,  # 最小1天
             le=30,  # 最大30天
-            description="登录有效期（1-30天）",
+            description="登录有效期(1-30天)",
         ),
         code: Optional[str] = Form(
-            default=None, min_length=1, max_length=10, description="验证码（1-10个字符，支持算术题和字母数字）"
+            default=None, min_length=1, max_length=10, description="验证码(1-10个字符,支持算术题和字母数字)"
         ),
         uuid: Optional[str] = Form(
             default=None,
             min_length=16,
             max_length=36,
-            description="验证码会话UUID（16-36个字符）",
+            description="验证码会话UUID(16-36个字符)",
         ),
     ):
-        # 调用父类初始化（处理标准参数）
+        # 调用父类初始化(处理标准参数)
         super().__init__(
             grant_type=grant_type,
             username=username,
@@ -71,7 +71,7 @@ class CustomOAuth2PasswordRequestForm(OAuth2PasswordRequestForm):
             client_secret=client_secret,
         )
 
-        # 验证 grant_type 必须为 password（增强安全性）
+        # 验证 grant_type 必须为 password(增强安全性)
         if grant_type != "password":
             raise HTTPException(
                 status_code=HttpStatusConstant.BAD_REQUEST,
@@ -79,7 +79,7 @@ class CustomOAuth2PasswordRequestForm(OAuth2PasswordRequestForm):
             )
 
         # 绑定扩展参数
-        self.login_days = login_days  # 统一使用小写蛇形命名（符合PEP8）
+        self.login_days = login_days  # 统一使用小写蛇形命名(符合PEP8)
         self.code = code
         self.uuid = uuid
 
@@ -87,17 +87,17 @@ class CustomOAuth2PasswordRequestForm(OAuth2PasswordRequestForm):
 class Auth:
     """
     权限装饰器
-    支持两种权限格式：
-    1. 按钮权限：如 "permission:btn:add"
-    2. API权限：如 "POST:/user/add" 或 "GET,POST:/user/*"
+    支持两种权限格式:
+    1. 按钮权限:如 "permission:btn:add"
+    2. API权限:如 "POST:/user/add" 或 "GET,POST:/user/*"
     
-    权限校验逻辑：有其中一个权限就放行
+    权限校验逻辑:有其中一个权限就放行
     """
 
     def __init__(self, permission_list: list):
         """
         权限装饰器
-        :param permission_list: 权限列表，支持按钮权限和API权限混合
+        :param permission_list: 权限列表,支持按钮权限和API权限混合
         """
         self.permission_list = permission_list
 
@@ -118,7 +118,7 @@ class Auth:
             # 获取用户的API权限列表 (格式: ["GET:/user/*", "POST:/role/add"])
             user_apis = current_user.get("apis", [])
             
-            # 遍历所需权限，有一个满足即可
+            # 遍历所需权限,有一个满足即可
             for required_perm in self.permission_list:
                 # 检查是否是API权限格式 (method:path)
                 if ":" in required_perm and "/" in required_perm:
@@ -130,15 +130,15 @@ class Auth:
                     if required_perm in permission_marks:
                         return await func(request, *args, **kwargs)
             
-            # 如果用户没有任何所需权限，返回错误信息
-            raise PermissionException(message="该用户无此接口权限！")
+            # 如果用户没有任何所需权限,返回错误信息
+            raise PermissionException(message="该用户无此接口权限!")
 
         return wrapper
     
     def _check_api_permission(self, required_perm: str, user_apis: list) -> bool:
         """
         检查API权限
-        :param required_perm: 所需权限，格式如 "GET:/user/add" 或 "GET,POST:/user/*"
+        :param required_perm: 所需权限,格式如 "GET:/user/add" 或 "GET,POST:/user/*"
         :param user_apis: 用户拥有的API权限列表
         :return: 是否有权限
         """
@@ -160,11 +160,11 @@ class Auth:
             user_methods = [m.strip().upper() for m in api_parts[0].split(",")]
             user_path = api_parts[1]
             
-            # 检查方法是否匹配（有交集即可）
+            # 检查方法是否匹配(有交集即可)
             if not set(required_methods) & set(user_methods):
                 continue
             
-            # 检查路径是否匹配（支持通配符 *）
+            # 检查路径是否匹配(支持通配符 *)
             if self._match_path(required_path, user_path):
                 return True
         
@@ -172,9 +172,9 @@ class Auth:
     
     def _match_path(self, required_path: str, user_path: str) -> bool:
         """
-        路径匹配，支持通配符
+        路径匹配,支持通配符
         :param required_path: 所需路径
-        :param user_path: 用户拥有的路径（可能包含通配符 *）
+        :param user_path: 用户拥有的路径(可能包含通配符 *)
         :return: 是否匹配
         """
         import re
@@ -183,9 +183,9 @@ class Auth:
         if required_path == user_path:
             return True
         
-        # 通配符匹配：将 * 转换为正则表达式
+        # 通配符匹配:将 * 转换为正则表达式
         if "*" in user_path:
-            # 转义特殊字符，将 * 替换为 .*
+            # 转义特殊字符,将 * 替换为 .*
             pattern = re.escape(user_path).replace(r"\*", ".*")
             pattern = f"^{pattern}$"
             if re.match(pattern, required_path):
@@ -250,7 +250,7 @@ async def hasAdmin(request: Request, department_id: str) -> bool:
 def getUserTypePermissions(user_type: int) -> dict:
     """
     获取用户身份对应的权限范围
-    :param user_type: 用户身份标识（0超级管理员，1管理员，2部门管理员，3普通用户）
+    :param user_type: 用户身份标识(0超级管理员,1管理员,2部门管理员,3普通用户)
     :return: 权限范围字典
     """
     permissions = {
@@ -262,7 +262,7 @@ def getUserTypePermissions(user_type: int) -> dict:
             "can_manage_users": True,
             "can_assign_roles": True,
             "can_view_all_data": True,
-            "description": "拥有系统最高权限，可管理所有资源和配置"
+            "description": "拥有系统最高权限,可管理所有资源和配置"
         },
         1: {  # 管理员
             "name": "管理员",
@@ -272,7 +272,7 @@ def getUserTypePermissions(user_type: int) -> dict:
             "can_manage_users": True,
             "can_assign_roles": True,
             "can_view_all_data": True,
-            "description": "可管理系统配置、部门和用户，但无法修改超级管理员"
+            "description": "可管理系统配置、部门和用户,但无法修改超级管理员"
         },
         2: {  # 部门管理员
             "name": "部门管理员",
@@ -300,7 +300,7 @@ def getUserTypePermissions(user_type: int) -> dict:
 
 async def canManageUser(current_user: dict, target_user_id: str) -> bool:
     """
-    判断当前用户是否可以管理目标用户（使用 Casbin）
+    判断当前用户是否可以管理目标用户(使用 Casbin)
     :param current_user: 当前用户信息
     :param target_user_id: 目标用户ID
     :return: 是否有权限
@@ -318,7 +318,7 @@ async def canManageUser(current_user: dict, target_user_id: str) -> bool:
 
 async def filterUsersByType(current_user: dict, query_filters: dict) -> dict:
     """
-    根据用户身份过滤查询条件（使用 Casbin）
+    根据用户身份过滤查询条件(使用 Casbin)
     :param current_user: 当前用户信息
     :param query_filters: 原始查询条件
     :return: 过滤后的查询条件
@@ -345,7 +345,7 @@ async def filterUsersByType(current_user: dict, query_filters: dict) -> dict:
         if scope["department_ids"]:
             query_filters["department_id__in"] = list(scope["department_ids"])
         else:
-            query_filters["id"] = None  # 无部门，无权限
+            query_filters["id"] = None  # 无部门,无权限
         return query_filters
     
     # 默认只能查看自己
@@ -407,8 +407,8 @@ class AuthController:
                 logger.warning("用户不存在")
                 raise AuthException(data="", message="用户不存在")
         except (JWEInvalidAuth, ExpiredSignatureError, JWEError):
-            logger.warning("用户token已失效，请重新登录")
-            raise AuthException(data="", message="用户token已失效，请重新登录")
+            logger.warning("用户token已失效,请重新登录")
+            raise AuthException(data="", message="用户token已失效,请重新登录")
         userInfo = await request.app.state.redis.get(
             f"{RedisKeyConfig.USER_INFO.key}:{user_id}"
         )
@@ -416,16 +416,16 @@ class AuthController:
             try:
                 userInfo = json.loads(userInfo)
             except (json.JSONDecodeError, ValueError):
-                # 如果JSON解析失败，清除缓存并重新获取
+                # 如果JSON解析失败,清除缓存并重新获取
                 await request.app.state.redis.delete(
                     f"{RedisKeyConfig.USER_INFO.key}:{user_id}"
                 )
                 userInfo = None
 
         if not userInfo:
-            # 重新获取用户信息（包括最新的下属部门和权限）
+            # 重新获取用户信息(包括最新的下属部门和权限)
             userInfo = await cls.get_user_info(user_id=user_id)
-            # 缓存用户信息，时间设置为30分钟
+            # 缓存用户信息,时间设置为30分钟
             await request.app.state.redis.set(
                 f"{RedisKeyConfig.USER_INFO.key}:{user_id}",
                 json.dumps(jsonable_encoder(userInfo), ensure_ascii=False, default=str),
@@ -438,35 +438,43 @@ class AuthController:
             f"{RedisKeyConfig.ACCESS_TOKEN.key}:{session_id}"
         )
         if not redis_token:
-            logger.warning("用户token已失效，请重新登录")
-            raise AuthException(data="", message="用户token已失效，请重新登录")
+            logger.warning("用户token已失效,请重新登录")
+            raise AuthException(data="", message="用户token已失效,请重新登录")
         return userInfo
 
     @classmethod
     async def get_user_info(cls, user_id: str) -> dict:
         """
-        获取用户信息（使用 Casbin 获取权限）
+        获取用户信息(使用 Casbin 获取权限)
         :param user_id:
         :return:
         """
-        user_info = await SystemUser.get_or_none(id=user_id, is_del=False).values(
-            id="id",
-            username="username",
-            nickname="nickname",
-            avatar="avatar",
-            gender="gender",
-            phone="phone",
-            email="email",
-            status="status",
-            user_type="user_type",
-            department_id="department__id",
-            department_name="department__name",
-            created_at="created_at",
-            updated_at="updated_at",
-        )
-        
-        if not user_info:
+        user = await SystemUser.get_or_none(id=user_id, is_del=False)
+        if not user:
             return None
+        
+        department_name = ""
+        if user.department:
+            from models import SystemDepartment
+            dept = await SystemDepartment.get_or_none(id=user.department, is_del=False)
+            if dept:
+                department_name = dept.name
+
+        user_info = {
+            "id": user.id,
+            "username": user.username,
+            "nickname": user.nickname,
+            "avatar": user.avatar,
+            "gender": user.gender,
+            "phone": user.phone,
+            "email": user.email,
+            "status": user.status,
+            "user_type": user.user_type,
+            "department_id": user.department,
+            "department_name": department_name,
+            "created_at": user.created_at,
+            "updated_at": user.updated_at,
+        }
         
         # 使用 Casbin 获取用户的所有权限
         user_permissions = await CasbinEnforcer.get_user_permissions(str(user_id))
@@ -518,8 +526,8 @@ class AuthController:
             )
             session_id: str = payload.get("session_id", "")
         except (JWEInvalidAuth, ExpiredSignatureError, JWEError):
-            logger.warning("用户token已失效，请重新登录")
-            raise AuthException(data="", message="用户token已失效，请重新登录")
+            logger.warning("用户token已失效,请重新登录")
+            raise AuthException(data="", message="用户token已失效,请重新登录")
         redis_token = await request.app.state.redis.get(
             f"{RedisKeyConfig.ACCESS_TOKEN.key}:{session_id}"
         )

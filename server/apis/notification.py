@@ -6,7 +6,7 @@ from typing import Optional, List
 
 from fastapi import APIRouter, Depends, Path, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
-from tortoise.models import Q
+from models.sa_orm import Q
 
 from annotation.auth import AuthController, Auth
 from annotation.log import Log, OperationType
@@ -19,18 +19,18 @@ from utils.response import ResponseUtil
 
 notificationAPI = APIRouter(prefix="/notification")
 
-# WebSocket 路由（不需要认证依赖，在内部处理）
+# WebSocket  # (description)
 notificationWsAPI = APIRouter(prefix="/notification")
 
 
-# ==================== WebSocket 端点 ====================
+# ==================== WebSocket  # (description)
 
 @notificationWsAPI.websocket("/ws/{token}")
 async def websocket_endpoint(websocket: WebSocket, token: str):
-    """WebSocket 连接端点"""
+    """WebSocket """
     user_id = None
     try:
-        # 验证 token 获取用户信息
+        #  # (description)
         from jose import jwt
         from utils.config import config
         from utils.get_redis import RedisKeyConfig
@@ -44,34 +44,34 @@ async def websocket_endpoint(websocket: WebSocket, token: str):
         session_id = payload.get("session_id")
         
         if not user_id:
-            await websocket.close(code=4001, reason="无效的 token")
+            await websocket.close(code=4001, reason="?token")
             return
         
-        # 验证 session 是否有效
+        #  # (description)
         redis = websocket.app.state.redis
         redis_token = await redis.get(f"{RedisKeyConfig.ACCESS_TOKEN.key}:{session_id}")
         if not redis_token:
-            await websocket.close(code=4001, reason="会话已过期")
+            await websocket.close(code=4001, reason="Session expired")
             return
         
         await ws_manager.connect(websocket, user_id)
         
-        # 获取通知服务
+        #  # (description)
         notification_service = NotificationService(redis)
         
-        # 发送连接成功消息
+        #  # (description)
         await websocket.send_json({
             "type": "connected",
-            "data": {"message": "WebSocket 连接成功"}
+            "data": {"message": "WebSocket "}
         })
         
-        # 发送待推送的通知
+        #  # (description)
         pending = await notification_service.get_pending_notifications(user_id)
         if pending:
             for notification in pending:
                 await websocket.send_json(notification)
         
-        # 从数据库查询实际未读数量
+        #  # (description)
         unread_count = await UserNotification.filter(
             user_id=user_id,
             is_read=False,
@@ -84,15 +84,15 @@ async def websocket_endpoint(websocket: WebSocket, token: str):
             "data": {"count": unread_count}
         })
         
-        # 保持连接
+        #  # (description)
         while True:
             data = await websocket.receive_text()
-            # 处理心跳
+            #  # (description)
             if data == "ping":
                 await websocket.send_text("pong")
                 continue
             
-            # 处理请求-响应模式
+            #  # (description)
             try:
                 message = json.loads(data)
                 if message.get("type") == "request":
@@ -113,7 +113,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str):
 
 
 async def handle_ws_request(websocket: WebSocket, message: dict, user_id: str, redis):
-    """处理 WebSocket 请求"""
+    """ WebSocket """
     import json
     from utils.get_redis import RedisKeyConfig
     
@@ -125,7 +125,7 @@ async def handle_ws_request(websocket: WebSocket, message: dict, user_id: str, r
     
     try:
         if action == "getUserInfo":
-            # 从 Redis 获取用户信息
+            #  # (description)
             user_info_str = await redis.get(f"{RedisKeyConfig.USER_INFO.key}:{user_id}")
             if user_info_str:
                 user_info = json.loads(user_info_str)
@@ -138,11 +138,11 @@ async def handle_ws_request(websocket: WebSocket, message: dict, user_id: str, r
                 await websocket.send_json({
                     "type": "response",
                     "requestId": request_id,
-                    "data": {"success": False, "msg": "用户信息不存在"}
+                    "data": {"success": False, "msg": "User info not found"}
                 })
         
         elif action == "getUserRoutes":
-            # 从 Redis 获取用户路由
+            #  # (description)
             routes_str = await redis.get(f"{RedisKeyConfig.USER_ROUTES.key}:{user_id}")
             if routes_str:
                 routes = json.loads(routes_str)
@@ -152,18 +152,18 @@ async def handle_ws_request(websocket: WebSocket, message: dict, user_id: str, r
                     "data": routes
                 })
             else:
-                # 路由缓存不存在，返回空让前端回退到 HTTP
+                #  # (description)
                 await websocket.send_json({
                     "type": "response",
                     "requestId": request_id,
-                    "data": {"success": False, "msg": "路由缓存不存在"}
+                    "data": {"success": False, "msg": "Route cache not found"}
                 })
         
         else:
             await websocket.send_json({
                 "type": "response",
                 "requestId": request_id,
-                "data": {"success": False, "msg": f"未知操作: {action}"}
+                "data": {"success": False, "msg": f": {action}"}
             })
     
     except Exception as e:
@@ -174,36 +174,36 @@ async def handle_ws_request(websocket: WebSocket, message: dict, user_id: str, r
         })
 
 
-# ==================== 通知管理 API ====================
+# ====================  # (description)
 
-@notificationAPI.post("/create", response_class=JSONResponse, summary="创建通知")
-@Log(title="创建通知", operation_type=OperationType.INSERT)
+@notificationAPI.post("/create", response_class=JSONResponse, summary="")
+@Log(title="", operation_type=OperationType.INSERT)
 @Auth(permission_list=["notification:btn:add", "POST:/notification/create"])
 async def create_notification(
     request: Request,
     params: CreateNotificationParams,
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """创建通知（草稿状态）"""
+    """ """
     user_type = current_user.get("user_type", UserType.NORMAL_USER)
     user_id = current_user.get("id")
     sub_departments = current_user.get("sub_departments", [])
     
-    # 权限检查
+    #  # (description)
     if user_type == UserType.NORMAL_USER:
-        return ResponseUtil.error(msg="普通用户无权创建通知")
+        return ResponseUtil.error(msg="")
     
-    # 部门管理员只能创建部门范围的通知
+    #  # (description)
     if user_type == UserType.DEPT_ADMIN:
         if params.scope == NotificationScope.ALL:
-            return ResponseUtil.error(msg="部门管理员无权创建全局通知")
+            return ResponseUtil.error(msg="   $")
         if params.scope == NotificationScope.DEPARTMENT:
-            # 检查目标部门是否在可管理范围内
+            #  # (description)
             for dept_id in params.scope_ids:
                 if dept_id not in sub_departments:
-                    return ResponseUtil.error(msg="无权向该部门发送通知")
+                    return ResponseUtil.error(msg="   ")
     
-    # 解析过期时间
+    #  # (description)
     expire_time = None
     if params.expire_time:
         try:
@@ -223,47 +223,47 @@ async def create_notification(
         creator_id=user_id
     )
     
-    return ResponseUtil.success(msg="创建成功", data={"id": str(notification.id)})
+    return ResponseUtil.success(msg="", data={"id": str(notification.id)})
 
 
-@notificationAPI.put("/update/{id}", response_class=JSONResponse, summary="更新通知")
-@Log(title="更新通知", operation_type=OperationType.UPDATE)
+@notificationAPI.put("/update/{id}", response_class=JSONResponse, summary="")
+@Log(title="", operation_type=OperationType.UPDATE)
 @Auth(permission_list=["notification:btn:update", "PUT:/notification/update/*"])
 async def update_notification(
     request: Request,
     params: UpdateNotificationParams,
-    id: str = Path(description="通知ID"),
+    id: str = Path(description="ID"),
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """更新通知（仅草稿状态可更新）"""
+    """Get notification detail"""
     notification = await SystemNotification.get_or_none(id=id, is_del=False)
     if not notification:
-        return ResponseUtil.error(msg="通知不存在")
+        return ResponseUtil.error(msg="Notification not found")
     
     if notification.status != NotificationStatus.DRAFT:
-        return ResponseUtil.error(msg="只有草稿状态的通知可以编辑")
+        return ResponseUtil.error(msg="")
     
-    # 权限检查
+    #  # (description)
     user_type = current_user.get("user_type", UserType.NORMAL_USER)
     user_id = current_user.get("id")
     department_id = current_user.get("department_id")
     sub_departments = current_user.get("sub_departments", [])
     
-    # 数据权限检查
+    #  # (description)
     if user_type >= UserType.DEPT_ADMIN:
-        # 部门管理员和普通用户只能编辑自己创建的通知
+        #  # (description)
         if str(notification.creator_id) != user_id:
-            return ResponseUtil.error(msg="无权编辑此通知")
+            return ResponseUtil.error(msg="   ")
     
-    # 部门管理员只能创建部门范围的通知
+    #  # (description)
     if user_type == UserType.DEPT_ADMIN and params.scope is not None:
         if params.scope == NotificationScope.ALL:
-            return ResponseUtil.error(msg="部门管理员无权创建全局通知")
+            return ResponseUtil.error(msg="   $")
         if params.scope == NotificationScope.DEPARTMENT and params.scope_ids:
             dept_ids = set([department_id] + sub_departments) if department_id else set(sub_departments)
             for dept_id in params.scope_ids:
                 if dept_id not in dept_ids:
-                    return ResponseUtil.error(msg="无权向该部门发送通知")
+                    return ResponseUtil.error(msg="   ")
     
     update_data = params.dict(exclude_none=True)
     if "expire_time" in update_data and update_data["expire_time"]:
@@ -278,47 +278,47 @@ async def update_notification(
         await notification.update_from_dict(update_data)
         await notification.save()
     
-    return ResponseUtil.success(msg="更新成功")
+    return ResponseUtil.success(msg="")
 
 
-@notificationAPI.post("/publish/{id}", response_class=JSONResponse, summary="发布通知")
-@Log(title="发布通知", operation_type=OperationType.UPDATE)
+@notificationAPI.post("/publish/{id}", response_class=JSONResponse, summary="")
+@Log(title="", operation_type=OperationType.UPDATE)
 @Auth(permission_list=["notification:btn:publish", "POST:/notification/publish/*"])
 async def publish_notification(
     request: Request,
-    id: str = Path(description="通知ID"),
+    id: str = Path(description="ID"),
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """发布通知"""
+    """ """
     notification = await SystemNotification.get_or_none(id=id, is_del=False)
     if not notification:
-        return ResponseUtil.error(msg="通知不存在")
+        return ResponseUtil.error(msg="Notification not found")
     
     if notification.status != NotificationStatus.DRAFT:
-        return ResponseUtil.error(msg="只有草稿状态的通知可以发布")
+        return ResponseUtil.error(msg="")
     
-    # 获取目标用户列表
+    #  # (description)
     target_user_ids = await _get_target_users(notification)
     
     if not target_user_ids:
-        return ResponseUtil.error(msg="没有符合条件的目标用户")
+        return ResponseUtil.error(msg="No target users found")
     
-    # 更新通知状态
+    #  # (description)
     notification.status = NotificationStatus.PUBLISHED
     notification.publish_time = datetime.now()
     await notification.save()
     
-    # 创建用户通知关联
+    #  # (description)
     for user_id in target_user_ids:
         await UserNotification.get_or_create(
             notification_id=notification.id,
             user_id=user_id
         )
     
-    # 推送通知
+    #  # (description)
     notification_service = NotificationService(request.app.state.redis)
     creator = await SystemUser.get_or_none(id=notification.creator_id)
-    creator_name = creator.nickname if creator else "系统"
+    creator_name = creator.nickname if creator else ""
     
     result = await notification_service.push_notification(
         notification_id=str(notification.id),
@@ -331,7 +331,7 @@ async def publish_notification(
     )
     
     return ResponseUtil.success(
-        msg="发布成功",
+        msg="",
         data={
             "total_users": len(target_user_ids),
             "online_count": result["online_count"],
@@ -340,84 +340,84 @@ async def publish_notification(
     )
 
 
-@notificationAPI.post("/revoke/{id}", response_class=JSONResponse, summary="撤回通知")
-@Log(title="撤回通知", operation_type=OperationType.UPDATE)
+@notificationAPI.post("/revoke/{id}", response_class=JSONResponse, summary="   ")
+@Log(title="   ", operation_type=OperationType.UPDATE)
 @Auth(permission_list=["notification:btn:revoke", "POST:/notification/revoke/*"])
 async def revoke_notification(
     request: Request,
-    id: str = Path(description="通知ID"),
+    id: str = Path(description="ID"),
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """撤回通知"""
+    """ """
     notification = await SystemNotification.get_or_none(id=id, is_del=False)
     if not notification:
-        return ResponseUtil.error(msg="通知不存在")
+        return ResponseUtil.error(msg="Notification not found")
     
     if notification.status != NotificationStatus.PUBLISHED:
-        return ResponseUtil.error(msg="只有已发布的通知可以撤回")
+        return ResponseUtil.error(msg="   ")
     
-    # 数据权限检查
+    #  # (description)
     user_type = current_user.get("user_type", UserType.NORMAL_USER)
     user_id = current_user.get("id")
     
     if user_type >= UserType.DEPT_ADMIN:
-        # 部门管理员和普通用户只能撤回自己创建的通知
+        #  # (description)
         if str(notification.creator_id) != user_id:
-            return ResponseUtil.error(msg="无权撤回此通知")
+            return ResponseUtil.error(msg="      ")
     
     notification.status = NotificationStatus.REVOKED
     await notification.save()
     
-    return ResponseUtil.success(msg="撤回成功")
+    return ResponseUtil.success(msg="   ")
 
 
-@notificationAPI.delete("/delete/{id}", response_class=JSONResponse, summary="删除通知")
-@Log(title="删除通知", operation_type=OperationType.DELETE)
+@notificationAPI.delete("/delete/{id}", response_class=JSONResponse, summary="")
+@Log(title="", operation_type=OperationType.DELETE)
 @Auth(permission_list=["notification:btn:delete", "DELETE:/notification/delete/*"])
 async def delete_notification(
     request: Request,
-    id: str = Path(description="通知ID"),
+    id: str = Path(description="ID"),
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """删除通知"""
+    """ """
     notification = await SystemNotification.get_or_none(id=id, is_del=False)
     if not notification:
-        return ResponseUtil.error(msg="通知不存在")
+        return ResponseUtil.error(msg="Notification not found")
     
-    # 数据权限检查
+    #  # (description)
     user_type = current_user.get("user_type", UserType.NORMAL_USER)
     user_id = current_user.get("id")
     
     if user_type >= UserType.DEPT_ADMIN:
-        # 部门管理员和普通用户只能删除自己创建的通知
+        #  # (description)
         if str(notification.creator_id) != user_id:
-            return ResponseUtil.error(msg="无权删除此通知")
+            return ResponseUtil.error(msg="   ")
     
     notification.is_del = True
     await notification.save()
     
-    return ResponseUtil.success(msg="删除成功")
+    return ResponseUtil.success(msg="")
 
 
-@notificationAPI.get("/list", response_class=JSONResponse, summary="获取通知列表（管理）")
-@Log(title="获取通知列表", operation_type=OperationType.SELECT)
+@notificationAPI.get("/list", response_class=JSONResponse, summary="")
+@Log(title="", operation_type=OperationType.SELECT)
 @Auth(permission_list=["notification:btn:list", "GET:/notification/list"])
 async def get_notification_list(
     request: Request,
-    page: int = Query(default=1, description="页码"),
-    pageSize: int = Query(default=20, description="每页数量"),
-    type: Optional[int] = Query(default=None, description="通知类型"),
-    status: Optional[int] = Query(default=None, description="状态"),
-    title: Optional[str] = Query(default=None, description="标题"),
+    page: int = Query(default=1, description=""),
+    pageSize: int = Query(default=20, description=""),
+    type: Optional[int] = Query(default=None, description=""),
+    status: Optional[int] = Query(default=None, description="Status"),
+    title: Optional[str] = Query(default=None, description="Title"),
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """获取通知列表（管理端）"""
+    """Get notification list"""
     user_type = current_user.get("user_type", UserType.NORMAL_USER)
     user_id = current_user.get("id")
     department_id = current_user.get("department_id")
     sub_departments = current_user.get("sub_departments", [])
     
-    # 基础过滤条件
+    #  # (description)
     base_filter = Q(is_del=False)
     
     if type is not None:
@@ -427,30 +427,30 @@ async def get_notification_list(
     if title:
         base_filter &= Q(title__icontains=title)
     
-    # 根据用户类型过滤数据权限
+    #  # (description)
     if user_type == UserType.SUPER_ADMIN:
-        # 超级管理员：看所有通知
+        #  # (description)
         pass
     elif user_type == UserType.ADMIN:
-        # 管理员：看所有通知
+        #  # (description)
         pass
     elif user_type == UserType.DEPT_ADMIN:
-        # 部门管理员：看自己创建的 + 全局通知 + 发给自己部门及下属部门的通知
+        #  # (description)
         dept_ids = set([department_id] + sub_departments) if department_id else set(sub_departments)
         
-        # 自己创建的 OR 全局通知
+        #  # (description)
         scope_filter = Q(creator_id=user_id) | Q(scope=NotificationScope.ALL)
         base_filter &= scope_filter
         
-        # 对于部门范围的通知，需要在Python层面过滤（JSON数组查询不可靠）
-        # 先获取所有符合基础条件的，再过滤部门范围的
+        #  # (description)
+        #  # (description)
     else:
-        # 普通用户：只能看自己创建的
+        #  # (description)
         base_filter &= Q(creator_id=user_id)
     
-    # 部门管理员需要特殊处理部门范围和用户范围的通知
+    #  # (description)
     if user_type == UserType.DEPT_ADMIN:
-        # 获取部门管理员管辖的所有部门下的用户ID
+        #  # (description)
         dept_ids = set([department_id] + sub_departments) if department_id else set(sub_departments)
         managed_user_ids = set()
         if dept_ids:
@@ -460,7 +460,7 @@ async def get_notification_list(
             ).values_list("id", flat=True)
             managed_user_ids = set(str(u) for u in users_in_depts)
         
-        # 获取所有符合条件的通知
+        #  # (description)
         all_notifications = await SystemNotification.filter(
             Q(is_del=False) & 
             (Q(type=type) if type is not None else Q()) &
@@ -474,24 +474,24 @@ async def get_notification_list(
             creator_name="creator__nickname"
         )
         
-        # Python层面过滤
+        # Python  # (description)
         filtered_result = []
         for n in all_notifications:
-            # 自己创建的
+            #  # (description)
             if str(n.get("creator_id")) == user_id:
                 filtered_result.append(n)
                 continue
-            # 全局通知
+            #  # (description)
             if n.get("scope") == NotificationScope.ALL:
                 filtered_result.append(n)
                 continue
-            # 部门范围的通知，检查是否包含自己管辖的部门
+            #  # (description)
             if n.get("scope") == NotificationScope.DEPARTMENT:
                 n_scope_ids = n.get("scope_ids") or []
                 if any(str(dept_id) in [str(s) for s in n_scope_ids] for dept_id in dept_ids):
                     filtered_result.append(n)
                 continue
-            # 用户范围的通知，检查是否包含自己管辖部门下的用户
+            #  # (description)
             if n.get("scope") == NotificationScope.USER:
                 n_scope_ids = n.get("scope_ids") or []
                 if any(str(s) in managed_user_ids for s in n_scope_ids):
@@ -520,34 +520,34 @@ async def get_notification_list(
     })
 
 
-@notificationAPI.get("/info/{id}", response_class=JSONResponse, summary="获取通知详情")
-@Log(title="获取通知详情", operation_type=OperationType.SELECT)
+@notificationAPI.get("/info/{id}", response_class=JSONResponse, summary="")
+@Log(title="", operation_type=OperationType.SELECT)
 async def get_notification_info(
     request: Request,
-    id: str = Path(description="通知ID"),
+    id: str = Path(description="ID"),
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """获取通知详情"""
+    """ """
     notification = await SystemNotification.get_or_none(
         id=id, is_del=False
     ).prefetch_related("creator")
     
     if not notification:
-        return ResponseUtil.error(msg="通知不存在")
+        return ResponseUtil.error(msg="Notification not found")
     
-    # 数据权限检查
+    #  # (description)
     user_type = current_user.get("user_type", UserType.NORMAL_USER)
     user_id = current_user.get("id")
     department_id = current_user.get("department_id")
     sub_departments = current_user.get("sub_departments", [])
     
-    # 检查是否有权限查看
+    #  # (description)
     can_view = False
     if user_type <= UserType.ADMIN:
-        # 超级管理员和管理员可以查看所有
+        #  # (description)
         can_view = True
     elif user_type == UserType.DEPT_ADMIN:
-        # 部门管理员：自己创建的 + 全局通知 + 发给自己部门的通知 + 发给自己管辖用户的通知
+        #  # (description)
         if str(notification.creator_id) == user_id:
             can_view = True
         elif notification.scope == NotificationScope.ALL:
@@ -558,7 +558,7 @@ async def get_notification_info(
             if any(str(dept_id) in [str(s) for s in n_scope_ids] for dept_id in dept_ids):
                 can_view = True
         elif notification.scope == NotificationScope.USER:
-            # 检查是否包含自己管辖部门下的用户
+            #  # (description)
             dept_ids = set([department_id] + sub_departments) if department_id else set(sub_departments)
             if dept_ids:
                 users_in_depts = await SystemUser.filter(
@@ -570,14 +570,14 @@ async def get_notification_info(
                 if any(str(s) in managed_user_ids for s in n_scope_ids):
                     can_view = True
     else:
-        # 普通用户：只能查看自己创建的
+        #  # (description)
         if str(notification.creator_id) == user_id:
             can_view = True
     
     if not can_view:
-        return ResponseUtil.error(msg="无权查看此通知")
+        return ResponseUtil.error(msg="      ")
     
-    # 获取已读统计
+    #  # (description)
     total_count = await UserNotification.filter(notification_id=id).count()
     read_count = await UserNotification.filter(notification_id=id, is_read=True).count()
     
@@ -604,21 +604,21 @@ async def get_notification_info(
     })
 
 
-# ==================== 用户通知 API ====================
+# ====================  # (description)
 
-@notificationAPI.get("/my/list", response_class=JSONResponse, summary="获取我的通知列表")
+@notificationAPI.get("/my/list", response_class=JSONResponse, summary="")
 async def get_my_notifications(
     request: Request,
-    page: int = Query(default=1, description="页码"),
-    pageSize: int = Query(default=20, description="每页数量"),
-    is_read: Optional[bool] = Query(default=None, description="是否已读"),
-    type: Optional[int] = Query(default=None, description="通知类型"),
+    page: int = Query(default=1, description=""),
+    pageSize: int = Query(default=20, description=""),
+    is_read: Optional[bool] = Query(default=None, description=""),
+    type: Optional[int] = Query(default=None, description=""),
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """获取当前用户的通知列表"""
+    """   """
     user_id = current_user.get("id")
     
-    # 基础过滤条件
+    #  # (description)
     base_filter = Q(user_id=user_id) & Q(notification__is_del=False) & Q(notification__status=NotificationStatus.PUBLISHED)
     
     if is_read is not None:
@@ -626,7 +626,7 @@ async def get_my_notifications(
     if type is not None:
         base_filter &= Q(notification__type=type)
     
-    # 过期时间条件：未过期 或 没有设置过期时间
+    #  # (description)
     expire_filter = Q(notification__expire_time__isnull=True) | Q(notification__expire_time__gt=datetime.now())
     
     final_filter = base_filter & expire_filter
@@ -656,13 +656,13 @@ async def get_my_notifications(
     })
 
 
-@notificationAPI.post("/my/read/{id}", response_class=JSONResponse, summary="标记通知已读")
+@notificationAPI.post("/my/read/{id}", response_class=JSONResponse, summary="")
 async def mark_notification_read(
     request: Request,
-    id: str = Path(description="用户通知ID"),
+    id: str = Path(description="   ID"),
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """标记通知为已读"""
+    """Mark notification as read"""
     user_id = current_user.get("id")
     
     user_notification = await UserNotification.get_or_none(
@@ -670,48 +670,48 @@ async def mark_notification_read(
     )
     
     if not user_notification:
-        return ResponseUtil.error(msg="通知不存在")
+        return ResponseUtil.error(msg="Notification not found")
     
     if not user_notification.is_read:
         user_notification.is_read = True
         user_notification.read_time = datetime.now()
         await user_notification.save()
         
-        # 减少未读计数
+        #  # (description)
         notification_service = NotificationService(request.app.state.redis)
         await notification_service.decrement_unread_count(user_id)
     
-    return ResponseUtil.success(msg="已标记为已读")
+    return ResponseUtil.success(msg="")
 
 
-@notificationAPI.post("/my/read-all", response_class=JSONResponse, summary="全部标记已读")
+@notificationAPI.post("/my/read-all", response_class=JSONResponse, summary="   ")
 async def mark_all_read(
     request: Request,
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """全部标记为已读"""
+    """Mark all notifications as read"""
     user_id = current_user.get("id")
     
     count = await UserNotification.filter(
         user_id=user_id, is_read=False
     ).update(is_read=True, read_time=datetime.now())
     
-    # 重置未读计数
+    #  # (description)
     notification_service = NotificationService(request.app.state.redis)
     await notification_service.reset_unread_count(user_id)
     
-    return ResponseUtil.success(msg=f"已将 {count} 条通知标记为已读")
+    return ResponseUtil.success(msg=f"Marked {count} notifications as read")
 
 
-@notificationAPI.get("/my/unread-count", response_class=JSONResponse, summary="获取未读数量")
+@notificationAPI.get("/my/unread-count", response_class=JSONResponse, summary="")
 async def get_unread_count(
     request: Request,
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """获取未读通知数量"""
+    """ """
     user_id = current_user.get("id")
     
-    # 从数据库查询实际未读数量
+    #  # (description)
     count = await UserNotification.filter(
         user_id=user_id,
         is_read=False,
@@ -719,7 +719,7 @@ async def get_unread_count(
         notification__status=NotificationStatus.PUBLISHED
     ).count()
     
-    # 同步更新 Redis 缓存
+    #  # (description)
     notification_service = NotificationService(request.app.state.redis)
     if count > 0:
         await request.app.state.redis.set(
@@ -734,12 +734,12 @@ async def get_unread_count(
     return ResponseUtil.success(data={"count": count})
 
 
-@notificationAPI.get("/my/pending", response_class=JSONResponse, summary="获取待推送通知（HTTP轮询）")
+@notificationAPI.get("/my/pending", response_class=JSONResponse, summary="Get pending notifications (HTTP)")
 async def get_pending_notifications(
     request: Request,
     current_user: dict = Depends(AuthController.get_current_user)
 ):
-    """获取待推送的通知（用于 HTTP 轮询方式）"""
+    """Get pending notifications (HTTP fallback)"""
     user_id = current_user.get("id")
     
     notification_service = NotificationService(request.app.state.redis)
@@ -748,17 +748,17 @@ async def get_pending_notifications(
     return ResponseUtil.success(data={"notifications": notifications})
 
 
-# ==================== 辅助函数 ====================
+# ====================  # (description)
 
 async def _get_target_users(notification: SystemNotification) -> List[str]:
-    """获取通知的目标用户列表"""
+    """Get target user list for notification"""
     if notification.scope == NotificationScope.ALL:
-        # 全部用户
+        #  # (description)
         users = await SystemUser.filter(is_del=False, status=1).values_list("id", flat=True)
         return [str(u) for u in users]
     
     elif notification.scope == NotificationScope.DEPARTMENT:
-        # 指定部门（含下属）
+        #  # (description)
         all_dept_ids = set()
         for dept_id in notification.scope_ids:
             child_ids = await DepartmentHelper.get_child_department_ids(dept_id)
@@ -770,7 +770,7 @@ async def _get_target_users(notification: SystemNotification) -> List[str]:
         return [str(u) for u in users]
     
     elif notification.scope == NotificationScope.USER:
-        # 指定用户
+        #  # (description)
         return notification.scope_ids
     
     return []

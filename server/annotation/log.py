@@ -30,15 +30,15 @@ class OperationType(Enum):
     """
     业务操作类型枚举
 
-    枚举值说明：
-    - OTHER：其他操作
-    - INSERT：增加数据操作
-    - DELETE：删除数据操作
-    - UPDATE：更新数据操作
+    枚举值说明:
+    - OTHER:其他操作
+    - INSERT:增加数据操作
+    - DELETE:删除数据操作
+    - UPDATE:更新数据操作
     - SELECT: 查询数据操作
     - IMPORT: 导入数据操作
-    - EXPORT：导出数据操作
-    - GRANT： 授权操作
+    - EXPORT:导出数据操作
+    - GRANT: 授权操作
     """
     OTHER = 0
     """
@@ -93,7 +93,7 @@ def _request_meta(request: Request) -> Dict[str, Any]:
     """
     ua_str: str = request.headers.get("User-Agent", "")
     ua = _parse_ua(ua_str)
-    # 优先取 X-Forwarded-For，再取 request.client.host
+    # 优先取 X-Forwarded-For,再取 request.client.host
     host: str = request.headers.get("X-Forwarded-For") or request.client.host
     return {
         "ip": host,
@@ -142,14 +142,14 @@ class Log:
                 request = kwargs["request"]
             
             if request is None:
-                # 如果找不到 request，直接执行原函数
+                # 如果找不到 request,直接执行原函数
                 return await func(*args, **kwargs)
             
             # ---------- 前置采集 ----------
             start_ns: int = time.perf_counter_ns()
             meta: Dict[str, Any] = _request_meta(request)
 
-            # 读取 JSON 请求体（限制 1 MB）
+            # 读取 JSON 请求体(限制 1 MB)
             body: bytes = b""
             content_type: str = request.headers.get("Content-Type", "")
             if "application/json" in content_type:
@@ -187,7 +187,7 @@ class Log:
                 result = ResponseUtil.error(msg=str(e))
                 success, status_code = False, 500
 
-            # 耗时（毫秒）
+            # 耗时(毫秒)
             cost_ms: int = int((time.perf_counter_ns() - start_ns) // 1_000_000)
 
             # ---------- 序列化响应 ----------
@@ -213,26 +213,29 @@ class Log:
                         session_id=session_id,
                     )
             else:
-                user: Dict[str, Any] = await AuthController.get_current_user(
-                    request, token
-                )
-                await SystemOperationLog.create(
-                    operation_name=self.title,
-                    operation_type=self.operation_type.value,
-                    request_method=meta["method"],
-                    request_path=meta["path"],
-                    operator_id=user["id"],
-                    department_id=user.get("department_id"),
-                    host=meta["ip"],
-                    location=meta["location"],
-                    user_agent=meta["ua"],
-                    browser=meta["browser"],
-                    os=meta["os"],
-                    request_params=params_str,
-                    response_result=json.dumps(resp_dict, ensure_ascii=False),
-                    status=int(success),
-                    cost_time=cost_ms,
-                )
+                try:
+                    user: Dict[str, Any] = await AuthController.get_current_user(
+                        request, token
+                    )
+                    await SystemOperationLog.create(
+                        operation_name=self.title,
+                        operation_type=self.operation_type.value,
+                        request_method=meta["method"],
+                        request_path=meta["path"],
+                        operator_id=user["id"],
+                        department_id=user.get("department_id"),
+                        host=meta["ip"],
+                        location=meta["location"],
+                        user_agent=meta["ua"],
+                        browser=meta["browser"],
+                        os=meta["os"],
+                        request_params=params_str,
+                        response_result=json.dumps(resp_dict, ensure_ascii=False),
+                        status=int(success),
+                        cost_time=cost_ms,
+                    )
+                except Exception:
+                    pass  # 操作日志记录失败不影响主流程（如退出登录后 token 已失效）
 
             return result
 

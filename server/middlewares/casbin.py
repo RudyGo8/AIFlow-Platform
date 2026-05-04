@@ -22,7 +22,7 @@ WHITE_LIST: List[str] = [
     "/api/auth/logout",
     "/api/auth/refreshToken",
     "/api/casbin/data-scope-info",
-    "/api/notification/ws",  # WebSocket 连接（内部验证 token）
+    "/api/notification/ws",  # WebSocket 连接(内部验证 token)
     "/openapi.json",
     "/docs",
     "/redoc",
@@ -31,11 +31,22 @@ WHITE_LIST: List[str] = [
     "/api/assets",
 ]
 
-# 仅需登录即可访问的路径（不检查 Casbin 策略）
+# 仅需登录即可访问的路径(不检查 Casbin 策略)
 LOGIN_ONLY_LIST: List[str] = [
     "/api/auth/info",
     "/api/auth/routes",
     "/api/casbin/data-scope",
+    "/api/log/",
+    "/api/notification/my/",
+    "/api/user/updatePassword",
+    "/api/user/updateBaseUserInfo",
+    "/api/user/updateEmail",
+    "/api/user/updatePhone",
+    "/api/file/upload/avatar",
+    "/api/dashboard/",
+    "/api/department/all",
+    "/api/department/tree",
+    "/api/department/list",
 ]
 
 
@@ -63,7 +74,7 @@ class CasbinMiddleware(BaseHTTPMiddleware):
     1. 检查是否在白名单中 -> 直接放行
     2. 解析 Token 获取用户信息
     3. 检查是否仅需登录 -> 登录即放行
-    4. 获取用户类型，超级管理员/管理员直接放行
+    4. 获取用户类型,超级管理员/管理员直接放行
     5. 使用 Casbin 检查 API 权限
     """
     
@@ -79,7 +90,7 @@ class CasbinMiddleware(BaseHTTPMiddleware):
         user_info = await self._get_user_from_token(request)
         
         if not user_info:
-            # 未登录，由后续的认证依赖处理
+            # 未登录,由后续的认证依赖处理
             return await call_next(request)
         
         # 将用户信息存入 request.state 供后续使用
@@ -113,7 +124,7 @@ class CasbinMiddleware(BaseHTTPMiddleware):
                         api_path = api_perm.get("path", "")
                         api_methods = api_perm.get("method", [])
                         
-                        # 检查路径匹配（支持通配符）
+                        # 检查路径匹配(支持通配符)
                         if self._match_path(path, api_path):
                             # 检查方法匹配
                             if isinstance(api_methods, list):
@@ -145,11 +156,11 @@ class CasbinMiddleware(BaseHTTPMiddleware):
             
         except Exception as e:
             logger.error(f"Casbin 权限验证异常: {e}")
-            # 出错时放行，避免阻塞正常请求
+            # 出错时放行,避免阻塞正常请求
             return await call_next(request)
     
     def _match_path(self, request_path: str, policy_path: str) -> bool:
-        """路径匹配，支持通配符"""
+        """路径匹配,支持通配符"""
         import re
         
         # 精确匹配
@@ -209,7 +220,7 @@ class CasbinMiddleware(BaseHTTPMiddleware):
                 "user_id": user_id,
                 "user_type": user.user_type,
                 "session_id": session_id,
-                "department_id": str(user.department_id) if user.department_id else None
+                "department_id": str(user.department) if user.department else None
             }
             
         except (JWEInvalidAuth, ExpiredSignatureError, JWEError):
