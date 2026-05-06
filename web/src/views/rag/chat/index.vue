@@ -16,8 +16,8 @@
           :class="['session-item', { active: s.session_id === sessionId }]"
           @click="switchSession(s.session_id)">
           <span class="session-dot" :class="{ active: s.session_id === sessionId }" />
-          <span class="session-title">{{ ragStore.getTitle(s.session_id) }}</span>
-          <span class="session-count">{{ s.message_count || 0 }}</span>
+          <span class="session-title">{{ s.title || ragStore.getTitle(s.session_id) }}</span>
+          <span class="session-count">{{ (s as any).message_count || 0 }}</span>
           <ElButton class="session-del" size="small" text type="danger" @click.stop="removeSession(s.session_id)">
             &#xe690;
           </ElButton>
@@ -77,12 +77,17 @@
                   <div>扩展查询：{{ msg.ragTrace.query || '-' }}</div>
                 </div>
                 <h4>检索结果</h4>
-                <div v-for="(chunk, ci) in traceChunks(msg.ragTrace)" :key="ci" class="tp-chunk">
-                  <div class="chunk-hdr">{{ chunk.filename || '-' }}
-                    <span v-if="chunk.page_number">(P{{ chunk.page_number }})</span>
-                    <span class="chunk-rank">#{{ chunk.rrf_rank || chunk.final_rank || ci + 1 }}</span>
+                <div class="tp-list">
+                  <div v-for="(chunk, ci) in traceChunks(msg.ragTrace)" :key="ci" class="tp-chunk">
+                    <div class="chunk-hdr">
+                      <span class="chunk-file">
+                        {{ chunk.filename || '-' }}
+                        <span v-if="chunk.page_number">(P{{ chunk.page_number }})</span>
+                      </span>
+                      <span class="chunk-rank">#{{ chunk.rrf_rank || chunk.final_rank || ci + 1 }}</span>
+                    </div>
+                    <div class="chunk-txt">{{ formatChunkText(chunk.text) }}</div>
                   </div>
-                  <div class="chunk-txt">{{ chunk.text || '-' }}</div>
                 </div>
               </div>
             </div>
@@ -165,6 +170,14 @@ let abortCtrl: AbortController | null = null
 watch([messages, sessionId], () => { ragStore.setSession(sessionId.value, [...messages.value]) }, { deep: true })
 
 function traceChunks(t: any) { if (!t) return []; return t.retrieved_chunks || t.initial_retrieved_chunks || t.expanded_retrieved_chunks || [] }
+function formatChunkText(text: string) {
+  if (!text) return '-'
+  return text
+    .replace(/\r/g, '')
+    .replace(/[ \t]*\n[ \t]*/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
 function renderMd(t: string): string {
   if (!t) return ''
   let o = t; o = o.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>'); o = o.replace(/`([^`]+)`/g, '<code>$1</code>')
@@ -175,7 +188,19 @@ function autoGrow() { const el = inputRef.value; if (el) { el.style.height = 'au
 function scrollBottom() { nextTick(() => msgEndRef.value?.scrollIntoView({ behavior: 'smooth' })) }
 function appendRagStep(i: string, l: string, d: string) { const s = `${i}|${l}|${d}`; const last = ragSteps.value.at(-1); if (!last || `${last.icon}|${last.label}|${last.detail}` !== s) ragSteps.value.push({ icon: i, label: l, detail: d }) }
 
-async function loadSessions() { try { const res = await fetchRagSessions(); sessions.value = res.sessions || [] } catch { /* */ } }
+async function loadSessions() {
+  try {
+    const res = await fetchRagSessions()
+    sessions.value = res.sessions || []
+    sessions.value.forEach((session: any) => {
+      if (session.title) {
+        ragStore.setSessionTitle(session.session_id, session.title)
+      }
+    })
+  } catch {
+    /* */
+  }
+}
 async function loadMessages(sid: string) {
   try {
     const res = await fetchRagSessionMessages(sid)
@@ -254,6 +279,7 @@ onMounted(() => { loadSessions(); loadMessages(sessionId.value) })
 }
 .message-row.user .msg-avatar { background:var(--el-color-success-light-9); color:var(--el-color-success); }
 .msg-body { max-width:72%; min-width:0; }
+.message-row.bot .msg-body { max-width: calc(100% - 46px); width: calc(100% - 46px); }
 .msg-bubble { padding:10px 16px; border-radius:16px; line-height:1.7; font-size:14px; word-break:break-word;
   :deep(code) { background:var(--el-color-primary-light-9); padding:2px 6px; border-radius:4px; font-size:13px; }
   :deep(pre) { background:var(--el-fill-color-dark); padding:12px; border-radius:8px; overflow-x:auto; margin:8px 0; code { background:none; padding:0; } }
@@ -268,12 +294,15 @@ onMounted(() => { loadSessions(); loadMessages(sessionId.value) })
 @keyframes pulse { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1.2)} }
 
 // ── trace panel ──
-.trace-toggle { margin-top:6px; }
-.trace-panel { margin-top:6px; padding:12px; background:var(--el-fill-color-light); border-radius:8px; font-size:12px; }
+.trace-toggle { margin-top:6px; width:100%; }
+.trace-panel { margin-top:6px; width:100%; box-sizing:border-box; padding:12px; background:var(--el-fill-color-light); border-radius:8px; font-size:12px; display:flex; flex-direction:column; }
 .tp-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px 12px; margin-bottom:8px; color:var(--el-text-color-regular); }
-.tp-chunk { margin-top:8px; padding:8px; background:var(--el-bg-color); border-radius:6px; border-left:3px solid var(--el-color-primary); }
-.chunk-hdr { font-weight:600; margin-bottom:2px; .chunk-rank { float:right; font-size:11px; color:var(--el-text-color-secondary); } }
-.chunk-txt { font-size:12px; color:var(--el-text-color-regular); line-height:1.5; max-height:80px; overflow-y:auto; white-space:pre-wrap; }
+.tp-list { display:flex; flex-direction:column; gap:8px; width:100%; }
+.tp-chunk { width:100%; box-sizing:border-box; padding:10px 12px; background:var(--el-bg-color); border-radius:6px; border-left:3px solid var(--el-color-primary); }
+.chunk-hdr { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:4px; font-weight:600; }
+.chunk-file { min-width:0; }
+.chunk-rank { flex-shrink:0; font-size:11px; color:var(--el-text-color-secondary); }
+.chunk-txt { font-size:12px; color:var(--el-text-color-regular); line-height:1.6; max-height:96px; overflow-y:auto; white-space:normal; word-break:break-word; }
 
 // ── 输入区 ──
 .input-area { flex-shrink:0; padding:12px 24px 16px; border-top:1px solid var(--el-border-color-lighter); background:var(--el-bg-color); }

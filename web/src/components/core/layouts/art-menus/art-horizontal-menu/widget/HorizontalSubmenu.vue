@@ -85,13 +85,13 @@
 
   // 判断是否只有一个子路由
   const hasSingleChild = computed(() => {
-    return filteredChildren.value.length === 1
+    return filteredChildren.value.length === 1 || (props.item.children?.length || 0) === 1
   })
 
   // 获取菜单项的实际跳转目标
   const getMenuItemTarget = computed(() => {
     if (hasSingleChild.value) {
-      return filteredChildren.value[0]
+      return filteredChildren.value[0] || props.item.children?.[0] || props.item
     }
     return props.item
   })

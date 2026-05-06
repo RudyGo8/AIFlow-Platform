@@ -9,7 +9,7 @@ export const routes: AppRouteRecord[] = [
     meta: {
       title: 'menus.system.title',
       icon: '&#xe72b;',
-      order: 2
+      order: 5
     },
     children: [
       {

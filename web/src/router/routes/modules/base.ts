@@ -33,7 +33,7 @@ export const routes: AppRouteRecord[] = [
     meta: {
       title: 'menus.system.userCenter',
       icon: '&#xe6bd;',
-      order: 999
+      order: 4
     },
     children: [
       {
@@ -43,7 +43,7 @@ export const routes: AppRouteRecord[] = [
         meta: {
           title: 'menus.system.userCenter',
           keepAlive: false,
-          isHide: true
+          isHide: false
         }
       }
     ]
@@ -55,7 +55,8 @@ export const routes: AppRouteRecord[] = [
     meta: {
       title: 'menus.personalLoginRecord.title',
       icon: '&#xe6ce;',
-      order: 999
+      order: 999,
+      isHide: true
     },
     children: [
       {
@@ -78,7 +79,8 @@ export const routes: AppRouteRecord[] = [
     meta: {
       title: 'menus.personalOperationRecord.title',
       icon: '&#xe6df;',
-      order: 999
+      order: 999,
+      isHide: true
     },
     children: [
       {

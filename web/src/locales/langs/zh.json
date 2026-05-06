@@ -137,7 +137,7 @@
   },
   "login": {
     "leftView": {
-      "title": "企业AI驱动平台",
+      "title": "知源智控台",
       "subTitle": "集成 RAG 知识库 · 智能问答 · 文档管理 · 企业级 AI 中台"
     },
     "title": "欢迎回来",
@@ -363,7 +363,8 @@
     "rag": {
       "title": "知源助手",
       "chat": "智能问答",
-      "documents": "文档管理"
+      "documents": "文档管理",
+      "daily": "AI日报"
     },
     "externalLinks": {
       "title": "外部链接",

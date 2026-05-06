@@ -363,7 +363,8 @@
     "rag": {
       "title": "ZhiYuan AI",
       "chat": "Chat",
-      "documents": "Documents"
+      "documents": "Documents",
+      "daily": "AI Daily"
     },
     "externalLinks": {
       "title": "External Links",

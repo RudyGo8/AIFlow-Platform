@@ -39,6 +39,85 @@ from utils.notification import NotificationService
 authAPI = APIRouter(prefix="/auth")
 
 
+def normalize_route_menu_structure(routes: list) -> list:
+    """Normalize menu data for legacy cached route structures."""
+    if not isinstance(routes, list):
+        return routes
+
+    def wrap_rag_leaf(route: dict, path: str, order: int) -> dict:
+        child_meta = dict(route.get("meta", {}))
+        child_meta["order"] = order
+        child_meta.setdefault("isHide", False)
+        parent_meta = dict(child_meta)
+        parent_meta.pop("keepAlive", None)
+        parent_meta.pop("isHide", None)
+
+        return {
+            "name": f"{route.get('name')}_",
+            "path": path,
+            "component": "/index/index",
+            "meta": parent_meta,
+            "children": [
+                {
+                    "name": route.get("name"),
+                    "path": path,
+                    "component": route.get("component"),
+                    "meta": child_meta,
+                }
+            ],
+        }
+
+    normalized_routes = []
+    for route in routes:
+        if route.get("path") == "/rag":
+            children = route.get("children", [])
+            for child in children:
+                if child.get("name") == "RagChat":
+                    normalized_routes.append(
+                        wrap_rag_leaf(child, "/rag-chat", 3)
+                    )
+                elif child.get("name") == "RagDocuments":
+                    normalized_routes.append(
+                        wrap_rag_leaf(child, "/rag-documents", 4)
+                    )
+            continue
+        if route.get("name") == "RagChat":
+            normalized_routes.append(wrap_rag_leaf(route, "/rag-chat", 3))
+            continue
+        if route.get("name") == "RagDocuments":
+            normalized_routes.append(wrap_rag_leaf(route, "/rag-documents", 4))
+            continue
+        if route.get("name") == "RagChat_":
+            route["path"] = "/rag-chat"
+            if route.get("children"):
+                route["children"][0]["path"] = "/rag-chat"
+            route.setdefault("meta", {})["order"] = 3
+        elif route.get("name") == "RagDocuments_":
+            route["path"] = "/rag-documents"
+            if route.get("children"):
+                route["children"][0]["path"] = "/rag-documents"
+            route.setdefault("meta", {})["order"] = 4
+        normalized_routes.append(route)
+
+    root_order_map = {
+        "/dashboard": 1,
+        "/ai-daily": 2,
+        "/rag-chat": 3,
+        "/rag-documents": 4,
+        "/user-center": 5,
+        "/system": 6,
+        "/log-manager": 7,
+    }
+    for route in normalized_routes:
+        path = route.get("path")
+        if path in root_order_map:
+            route.setdefault("meta", {})["order"] = root_order_map[path]
+
+    return sorted(
+        normalized_routes, key=lambda item: item.get("meta", {}).get("order", 9999)
+    )
+
+
 def get_login_meta(request: Request) -> dict:
     """Build request metadata"""
     meta = _request_meta(request)
@@ -392,7 +471,13 @@ async def get_user_routes(
         f"{RedisKeyConfig.USER_ROUTES.key}:{current_user['id']}"
     )
     if permission_cache:
-        return ResponseUtil.success(data=json.loads(permission_cache))
+        cached_routes = normalize_route_menu_structure(json.loads(permission_cache))
+        await request.app.state.redis.set(
+            f"{RedisKeyConfig.USER_ROUTES.key}:{current_user['id']}",
+            json.dumps(cached_routes, ensure_ascii=False, default=str),
+            ex=timedelta(minutes=30),
+        )
+        return ResponseUtil.success(data=cached_routes)
     uid = current_user.get("id")
     user_type = current_user.get("user_type", 3)
 
@@ -572,7 +657,7 @@ async def get_user_routes(
 
     #  # (description)
     base_routes = await get_base_public_routes()
-    all_routes = base_routes + permissions
+    all_routes = normalize_route_menu_structure(base_routes + permissions)
     
     await request.app.state.redis.set(
         f"{RedisKeyConfig.USER_ROUTES.key}:{current_user['id']}",
@@ -618,7 +703,7 @@ async def get_base_public_routes() -> list:
             "meta": {
                 "title": "menus.system.userCenter",
                 "icon": "&#xe6bd;",
-                "order": 999
+                "order": 4
             },
             "children": [
                 {
@@ -628,7 +713,7 @@ async def get_base_public_routes() -> list:
                     "meta": {
                         "title": "menus.system.userCenter",
                         "keepAlive": False,
-                        "isHide": True
+                        "isHide": False
                     }
                 }
             ]
@@ -640,7 +725,8 @@ async def get_base_public_routes() -> list:
             "meta": {
                 "title": "menus.personalLoginRecord.title",
                 "icon": "&#xe6ce;",
-                "order": 999
+                "order": 999,
+                "isHide": True
             },
             "children": [
                 {
@@ -663,7 +749,8 @@ async def get_base_public_routes() -> list:
             "meta": {
                 "title": "menus.personalOperationRecord.title",
                 "icon": "&#xe6df;",
-                "order": 999
+                "order": 999,
+                "isHide": True
             },
             "children": [
                 {
@@ -703,33 +790,70 @@ async def get_base_public_routes() -> list:
             ]
         },
         {
-            "name": "Rag",
-        "path": "/rag",
+            "name": "AiDaily_",
+        "path": "/ai-daily",
         "component": "/index/index",
         "meta": {
-            "title": "menus.rag.title",
-            "icon": "🤖",
-            "order": 10
+            "title": "menus.rag.daily",
+            "icon": "&#xe710;",
+            "order": 2
+        },
+        "children": [
+            {
+                "name": "AiDaily",
+                "path": "/ai-daily",
+                "component": "/ai/daily/index",
+                "meta": {
+                    "title": "menus.rag.daily",
+                    "icon": "&#xe710;",
+                    "keepAlive": False,
+                    "isHide": False
+                }
+            }
+        ]
+    },
+    {
+        "name": "RagChat_",
+        "path": "/rag-chat",
+        "component": "/index/index",
+        "meta": {
+            "title": "menus.rag.chat",
+            "icon": "&#xe6c2;",
+            "order": 3
         },
         "children": [
             {
                 "name": "RagChat",
-                "path": "/rag/chat",
+                "path": "/rag-chat",
                 "component": "/rag/chat/index",
                 "meta": {
                     "title": "menus.rag.chat",
                     "icon": "&#xe6c2;",
-                    "keepAlive": True
+                    "keepAlive": True,
+                    "isHide": False
                 }
-            },
+            }
+        ]
+    },
+    {
+        "name": "RagDocuments_",
+        "path": "/rag-documents",
+        "component": "/index/index",
+        "meta": {
+            "title": "menus.rag.documents",
+            "icon": "&#xe727;",
+            "order": 4
+        },
+        "children": [
             {
                 "name": "RagDocuments",
-                "path": "/rag/documents",
+                "path": "/rag-documents",
                 "component": "/rag/documents/index",
                 "meta": {
                     "title": "menus.rag.documents",
                     "icon": "&#xe727;",
-                    "keepAlive": False
+                    "keepAlive": False,
+                    "isHide": False
                 }
             }
         ]

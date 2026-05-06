@@ -177,9 +177,10 @@
       return findIframeMenuList(route.path, allMenus)
     }
 
-    // 处理一级菜单
+    // 一级直达页面在双栏/混合菜单下不要让侧边栏整块空白，
+    // 回退显示全部一级菜单，保持导航连续性。
     if (route.meta.isFirstLevel) {
-      return []
+      return allMenus.filter((menu) => !menu.meta.isHide)
     }
 
     // 返回当前顶级路径对应的子菜单

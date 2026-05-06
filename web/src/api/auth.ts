@@ -86,21 +86,10 @@ export async function fetchGetUserInfo() {
 
 /**
  * 获取用户路由
- * 优先使用 WebSocket，失败时回退到 HTTP
+ * 始终走 HTTP，避免 WebSocket 读取到过期的 user_routes 缓存
  * @returns 用户动态路由数据
  */
 export async function fetchGetUserRoutes() {
-  // 优先使用 WebSocket
-  if (notificationWs.isConnected()) {
-    try {
-      const data = await notificationWs.getUserRoutes()
-      return { success: true, data, msg: 'ok' }
-    } catch (e) {
-      console.warn('[Auth] WebSocket 获取路由失败，回退到 HTTP:', e)
-    }
-  }
-  
-  // 回退到 HTTP
   return request.get<Api.Auth.UserRoutes>({
     url: '/api/auth/routes'
   })

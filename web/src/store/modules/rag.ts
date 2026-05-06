@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-/** RAG 对话状态持久化 — 主题切换等触发的 RouterView refresh 不会丟失对话 */
 export const useRagStore = defineStore(
   'ragStore',
   () => {
@@ -12,12 +11,18 @@ export const useRagStore = defineStore(
     function setSession(sid: string, msgs: any[]) {
       sessionId.value = sid
       messages.value = msgs
-      // 自动用第一条用户消息作为标题
+
       if (!sessionTitles.value[sid]) {
         const firstUser = msgs.find((m: any) => m.isUser)
         if (firstUser?.text) {
           sessionTitles.value[sid] = firstUser.text.slice(0, 30)
         }
+      }
+    }
+
+    function setSessionTitle(sid: string, title: string) {
+      if (sid && title?.trim()) {
+        sessionTitles.value[sid] = title.trim().slice(0, 30)
       }
     }
 
@@ -30,7 +35,15 @@ export const useRagStore = defineStore(
       messages.value = []
     }
 
-    return { sessionId, messages, sessionTitles, setSession, getTitle, clearSession }
+    return {
+      sessionId,
+      messages,
+      sessionTitles,
+      setSession,
+      setSessionTitle,
+      getTitle,
+      clearSession
+    }
   },
   { persist: { storage: sessionStorage } }
 )

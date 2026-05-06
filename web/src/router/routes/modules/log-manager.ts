@@ -9,7 +9,7 @@ export const routes: AppRouteRecord[] = [
     meta: {
       title: 'menus.logManager.title',
       icon: '&#xe6ce;', // 日志图标
-      order: 3
+      order: 6
     },
     children: [
       {

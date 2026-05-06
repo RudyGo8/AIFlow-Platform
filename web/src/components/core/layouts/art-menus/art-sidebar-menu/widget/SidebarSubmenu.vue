@@ -130,7 +130,7 @@
         if (item.children && item.children.length > 0) {
           const filteredChildren = filterRoutes(item.children)
           // 如果所有子菜单都被过滤掉了，则隐藏父菜单
-          return filteredChildren.length > 0
+          return filteredChildren.length > 0 || item.children.length === 1
         }
 
         // 叶子节点且未被隐藏，保留
@@ -168,7 +168,7 @@
       return false
     }
     const filteredChildren = filterRoutes(item.children)
-    return filteredChildren.length === 1
+    return filteredChildren.length === 1 || item.children.length === 1
   }
 
   /**
@@ -180,7 +180,7 @@
   const getMenuItemTarget = (item: AppRouteRecord): AppRouteRecord => {
     if (hasSingleChild(item)) {
       const filteredChildren = filterRoutes(item.children!)
-      return filteredChildren[0]
+      return filteredChildren[0] || item.children![0]
     }
     return item
   }
