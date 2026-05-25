@@ -36,7 +36,8 @@ node_modules/
 
 # Uploads & data
 server/data/
-server/assets/
+server/assets/*
+!server/assets/ip2region_v4.xdb
 server/uploads/
 
 # Docker volumes
