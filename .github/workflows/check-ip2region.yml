@@ -48,6 +48,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add server/assets/ip2region_v4.xdb .github/ip2region_hash.txt
+          git add -f server/assets/ip2region_v4.xdb .github/ip2region_hash.txt
           git commit -m "chore: update ip2region_v4.xdb"
           git push
